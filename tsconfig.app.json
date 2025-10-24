@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "target": "ES2020",
+    "module": "ESNext",
+    "strict": true,
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "types": ["svelte", "@tauri-apps/api"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.svelte"]
+}

@@ -1,0 +1,13 @@
+Read .md files if you need information for any implementation.
+Refractor if exceeding 500 lines.
+Make it responsive.
+Do the absolute minimal code change for the request to prevent breaking other features/codes.
+Any confirmation/popup dialog should be Flowbite.
+Make the code modular and with proper comments so that a human can edit it later.
+Do not change any other methods or anything in the files I sent unless it's absolutely necessary for what I ask for to work. 
+Do not fix style in the existing code unless I ask for that. . 
+Do not remove existing comments unless I explicitly ask for it or we're removing that code completely.
+Always use Flowbite "small" theme.
+Use free Font Awesome icons
+Any new component should strictly follow Flowbite.
+

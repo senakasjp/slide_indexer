@@ -1,0 +1,11 @@
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/deps/wry-52765bf7c4b92786.d: /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/lib.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/application.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/web_context.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/download.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/file_drop.rs
+
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/deps/libwry-52765bf7c4b92786.rmeta: /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/lib.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/application.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/web_context.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/download.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/file_drop.rs
+
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/lib.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/application.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/mod.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/web_context.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/mod.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/download.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry-0.24.11/src/webview/wkwebview/file_drop.rs:

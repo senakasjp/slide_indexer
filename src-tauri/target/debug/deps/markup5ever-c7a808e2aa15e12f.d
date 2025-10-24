@@ -1,0 +1,15 @@
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/deps/markup5ever-c7a808e2aa15e12f.d: /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/lib.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/data/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/tree_builder.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/serialize.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/buffer_queue.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/smallcharset.rs /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/markup5ever-bf6cd68e755ceb63/out/generated.rs /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/markup5ever-bf6cd68e755ceb63/out/named_entities.rs
+
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/deps/libmarkup5ever-c7a808e2aa15e12f.rmeta: /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/lib.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/data/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/mod.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/tree_builder.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/serialize.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/buffer_queue.rs /Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/smallcharset.rs /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/markup5ever-bf6cd68e755ceb63/out/generated.rs /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/markup5ever-bf6cd68e755ceb63/out/named_entities.rs
+
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/lib.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/data/mod.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/mod.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/tree_builder.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/serialize.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/buffer_queue.rs:
+/Users/senaka/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/smallcharset.rs:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/markup5ever-bf6cd68e755ceb63/out/generated.rs:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/markup5ever-bf6cd68e755ceb63/out/named_entities.rs:
+
+# env-dep:OUT_DIR=/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/markup5ever-bf6cd68e755ceb63/out

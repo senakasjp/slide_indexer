@@ -1,0 +1,22 @@
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/deps/slides_indexer-27e56cc44ea6436f.d: src/main.rs src/error.rs src/models.rs src/scanner.rs src/state.rs /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/index-8ef22d9c.css /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/dbb2cff8a3e0dbedd4c5698852276c8c9821cc72d5e8e28d1bf62a976f140306.css /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/index.html /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/96d892b268083240cde81beec0ed9dee7e26cc32678003836805c9f033749165.html /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/index-99bb29a2.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/de0b842012f90719fc06c7f7ae8bc245dbb529c87cd3294c112e1a3ae8367828.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/dialog-d7a1f093.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/7ff5c7efd6b81d2dec21353aed4af81d3d5acd31903274b47498810606695b7a.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/tauri-f44260ec.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/cee3ffd72a4b56d836118a70cf31fefaaad2f54c11279a838741686f4993b68d.js
+
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/deps/libslides_indexer-27e56cc44ea6436f.rmeta: src/main.rs src/error.rs src/models.rs src/scanner.rs src/state.rs /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/index-8ef22d9c.css /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/dbb2cff8a3e0dbedd4c5698852276c8c9821cc72d5e8e28d1bf62a976f140306.css /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/index.html /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/96d892b268083240cde81beec0ed9dee7e26cc32678003836805c9f033749165.html /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/index-99bb29a2.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/de0b842012f90719fc06c7f7ae8bc245dbb529c87cd3294c112e1a3ae8367828.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/dialog-d7a1f093.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/7ff5c7efd6b81d2dec21353aed4af81d3d5acd31903274b47498810606695b7a.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/tauri-f44260ec.js /Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/cee3ffd72a4b56d836118a70cf31fefaaad2f54c11279a838741686f4993b68d.js
+
+src/main.rs:
+src/error.rs:
+src/models.rs:
+src/scanner.rs:
+src/state.rs:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/index-8ef22d9c.css:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/dbb2cff8a3e0dbedd4c5698852276c8c9821cc72d5e8e28d1bf62a976f140306.css:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/index.html:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/96d892b268083240cde81beec0ed9dee7e26cc32678003836805c9f033749165.html:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/index-99bb29a2.js:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/de0b842012f90719fc06c7f7ae8bc245dbb529c87cd3294c112e1a3ae8367828.js:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/dialog-d7a1f093.js:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/7ff5c7efd6b81d2dec21353aed4af81d3d5acd31903274b47498810606695b7a.js:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/../dist/assets/tauri-f44260ec.js:
+/Volumes/STORAGE/SITES-2025/Slides/src-tauri/target/debug/build/slides-indexer-114c62fd99836e81/out/tauri-codegen-assets/cee3ffd72a4b56d836118a70cf31fefaaad2f54c11279a838741686f4993b68d.js:
+
+# env-dep:CARGO_PKG_AUTHORS=
+# env-dep:CARGO_PKG_DESCRIPTION=

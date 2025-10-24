@@ -1,0 +1,6 @@
+I have various Powerpoint and Beamer slidesets.
+When I need I can't find relevent slides.
+I need a software using svelt to keep an index of all slides.
+When I give the path, software should scan all slides of slidesets and keep an index
+Using a keyword, I should be able to find slidesets with its path. Need a preview as well.
+Keep the data in a json based database.
