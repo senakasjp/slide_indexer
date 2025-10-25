@@ -2,6 +2,39 @@
 
 All notable changes to Slides Indexer will be documented in this file.
 
+## [0.4.1] - 2025-10-25
+
+### 📊 Cache Statistics Display
+- **Directory Cache Info**
+  - Shows word count for each linked directory (snippets + slides + keywords)
+  - Displays cache size in appropriate units (B, KB, MB, GB)
+  - Updates automatically when rescanning or linking folders
+  - Formatted with icons for easy readability
+  
+- **Visual Display**
+  - 📝 Word count icon with formatted numbers (e.g., "1,495,503 words")
+  - 💾 Database icon with file size (e.g., "9.56 MB")
+  - Information displayed below directory path in directory list
+  
+### 🐛 Bug Fixes
+- **Directory Path Matching**
+  - Fixed issue where directories with spaces (e.g., "Calibre Library") weren't matching items correctly
+  - Improved path comparison logic to handle both absolute paths and directory names
+  - Applied consistent matching logic across stats calculation and search filtering
+  
+- **Search Filtering**
+  - Fixed search results not showing for directories with spaces or special characters
+  - Both local (offline) and remote search now use robust directory matching
+  - Search results now properly filter when specific directories are selected
+
+### 🔧 Technical Changes
+- Added `getDirectoryStats()` function to calculate per-directory metrics
+- Updated `filterLocalItems()` to use improved path matching
+- Updated `executeRemoteSearch()` to use improved path matching
+- Consistent directory name extraction across all path-matching operations
+
+---
+
 ## [0.4.0] - 2025-10-24
 
 ### 💾 Incremental Cache Saving (Critical Fix)
@@ -252,11 +285,11 @@ brew install poppler tesseract  # For OCR support
 
 # Debug build (recommended for development)
 npm run tauri build -- --debug
-# Output: src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.0_aarch64.dmg
+# Output: src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
 
 # Release build (optimized)
 npm run tauri build
-# Output: src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.0_aarch64.dmg
+# Output: src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
 ```
 
 ### Testing & Debugging
@@ -287,8 +320,8 @@ npm run tauri:dev
 
 ---
 
-**Current Stable Version**: 0.4.0  
+**Current Stable Version**: 0.4.1  
 **Platform**: macOS (Apple Silicon & Intel)  
-**Build Date**: October 24, 2025
+**Build Date**: October 25, 2025
 
 

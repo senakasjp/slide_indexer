@@ -1,13 +1,13 @@
 # Slides Indexer - Quick Reference Guide
 
-**Version 0.4.0** | **Tauri Desktop Application** | **macOS Only**
+**Version 0.4.1** | **Tauri Desktop Application** | **macOS Only**
 
 ## 🚀 Getting Started
 
 ### Installation
 ```bash
 # Install from DMG
-Slides Indexer_0.4.0_aarch64.dmg
+Slides Indexer_0.4.1_aarch64.dmg
 
 # Run with console logs
 /Applications/Slides\ Indexer.app/Contents/MacOS/Slides\ Indexer
@@ -43,6 +43,12 @@ Rescan → Scans ALL linked folders
 Click "Clear Cache" button → Forces complete re-index on next scan
 
 ## 📊 Understanding Scan Status
+
+### Cache Statistics (v0.4.1)
+Each directory in the list shows:
+- **📝 Word count** - Total words cached (e.g., "1,495,503 words")
+- **💾 Cache size** - Storage used (e.g., "9.56 MB")
+- Updates automatically after rescans
 
 ### Visual Indicators (In App)
 - ✅ **Green checkmark** - File cached (skipped)
@@ -192,7 +198,7 @@ npm run tauri build
 
 ---
 
-**Version**: 0.4.0  
+**Version**: 0.4.1  
 **Platform**: macOS (Apple Silicon & Intel)  
 **App Type**: Tauri Desktop Application  
 **Console Logs**: Required for debugging (run from Terminal)

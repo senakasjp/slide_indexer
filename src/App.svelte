@@ -362,8 +362,17 @@ $: {
     } else if (selectedDirectories.size < directories.length) {
       // Some directories selected = filter by those
       results = results.filter((item) => {
-        const itemDir = item.path.split('/')[0] ?? item.path;
-        return selectedDirectories.has(itemDir);
+        const itemPath = item.path || '';
+        const itemDir = itemPath.split('/')[0] ?? itemPath;
+        
+        // Check if item matches any selected directory
+        for (const directory of selectedDirectories) {
+          const directoryName = directory.split('/').filter(Boolean).pop() ?? directory;
+          if (itemDir === directoryName || itemPath.startsWith(directory) || itemDir === directory) {
+            return true;
+          }
+        }
+        return false;
       });
     }
     // If all directories selected, don't filter (show all)
@@ -390,8 +399,17 @@ $: {
       } else if (selectedDirectories.size < directories.length) {
         // Some directories selected = filter by those
         sanitised = sanitised.filter((item) => {
-          const itemDir = item.path.split('/')[0] ?? item.path;
-          return selectedDirectories.has(itemDir);
+          const itemPath = item.path || '';
+          const itemDir = itemPath.split('/')[0] ?? itemPath;
+          
+          // Check if item matches any selected directory
+          for (const directory of selectedDirectories) {
+            const directoryName = directory.split('/').filter(Boolean).pop() ?? directory;
+            if (itemDir === directoryName || itemPath.startsWith(directory) || itemDir === directory) {
+              return true;
+            }
+          }
+          return false;
         });
       }
       // If all directories selected, don't filter (show all)
@@ -1042,6 +1060,66 @@ $: {
     return new Date(timestamp).toLocaleString();
   };
 
+  const getDirectoryStats = (directory: string): { wordCount: number; cacheSize: string } => {
+    // Get all items for this directory
+    // Items may have paths like "LECTURING/file.pptx" or just relative paths
+    // Directory might be a full path like "/Volumes/STORAGE/MEGA/LECTURING"
+    // Extract the last component of the directory path for matching
+    const directoryName = directory.split('/').filter(Boolean).pop() ?? directory;
+    
+    const directoryItems = items.filter((item) => {
+      // Check if item path starts with the directory name or is within it
+      const itemPath = item.path || '';
+      const itemDir = itemPath.split('/')[0] ?? itemPath;
+      
+      // Match either the full directory path or just the directory name
+      return itemDir === directoryName || itemPath.startsWith(directory) || itemDir === directory;
+    });
+
+    // Count words from all text content
+    let totalWords = 0;
+    for (const item of directoryItems) {
+      // Count words in snippet
+      if (item.snippet) {
+        totalWords += item.snippet.split(/\s+/).filter(Boolean).length;
+      }
+      // Count words in all slides
+      if (item.slides) {
+        for (const slide of item.slides) {
+          if (slide.text) {
+            totalWords += slide.text.split(/\s+/).filter(Boolean).length;
+          }
+        }
+      }
+      // Count words in keywords
+      if (item.keywords) {
+        for (const keyword of item.keywords) {
+          if (keyword) {
+            totalWords += 1; // Count each keyword as 1 word
+          }
+        }
+      }
+    }
+
+    // Calculate cache size (approximate JSON size in bytes)
+    const cacheJson = JSON.stringify(directoryItems);
+    const cacheSizeBytes = new Blob([cacheJson]).size;
+    
+    // Format size
+    let cacheSize: string;
+    if (cacheSizeBytes < 1024) {
+      cacheSize = `${cacheSizeBytes} B`;
+    } else if (cacheSizeBytes < 1024 * 1024) {
+      cacheSize = `${(cacheSizeBytes / 1024).toFixed(2)} KB`;
+    } else if (cacheSizeBytes < 1024 * 1024 * 1024) {
+      cacheSize = `${(cacheSizeBytes / (1024 * 1024)).toFixed(2)} MB`;
+    } else {
+      cacheSize = `${(cacheSizeBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    }
+
+    return { wordCount: totalWords, cacheSize };
+  };
+
   const extractSlideText = (xml: string): string => {
     const regex = /<a:t[^>]*>([\s\S]*?)<\/a:t>/g;
     const segments: string[] = [];
@@ -1497,6 +1575,7 @@ $: {
             {#if directories.length}
               <ul class="divide-y divide-slate-200 dark:divide-slate-700/80">
                 {#each directories as directory}
+                  {@const stats = getDirectoryStats(directory)}
                   <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition hover:bg-slate-50 dark:hover:bg-slate-800/80">
                     <div class="flex min-w-0 flex-1 items-center gap-3">
                       <button
@@ -1507,8 +1586,18 @@ $: {
                       >
                         <span class="fa-solid {selectedDirectories.has(directory) ? 'fa-square-check' : 'fa-square'} text-xl"></span>
                       </button>
-                      <div class="min-w-0 flex-1">
+                      <div class="min-w-0 flex-1 space-y-1">
                         <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{directory}</p>
+                        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                          <span class="inline-flex items-center gap-1.5" title="Total words in cache">
+                            <span class="fa-solid fa-font text-slate-400 dark:text-slate-500"></span>
+                            {stats.wordCount.toLocaleString()} words
+                          </span>
+                          <span class="inline-flex items-center gap-1.5" title="Cache size">
+                            <span class="fa-solid fa-database text-slate-400 dark:text-slate-500"></span>
+                            {stats.cacheSize}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div class="flex flex-wrap gap-2">

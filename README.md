@@ -1,6 +1,6 @@
 # Slides Indexer
 
-**Version 0.4.0** - Native macOS desktop app for cataloging PowerPoint and PDF slide decks. Built with Tauri (Rust) + Svelte + Flowbite. Index, search, and preview presentation files with intelligent checksum-based caching and OCR support.
+**Version 0.4.1** - Native macOS desktop app for cataloging PowerPoint and PDF slide decks. Built with Tauri (Rust) + Svelte + Flowbite. Index, search, and preview presentation files with intelligent checksum-based caching and OCR support.
 
 > **⚠️ Tauri Desktop Application**: This is a **native desktop app** (not a web app). All debugging and troubleshooting should be done by running the app from Terminal to see console logs. There is no browser console - all logs appear in Terminal where you launch the app.
 
@@ -9,7 +9,7 @@
 > **📖 For a condensed reference guide, see [QUICK-REFERENCE.md](./QUICK-REFERENCE.md)**
 
 **For Users:**
-1. Install the DMG: `Slides Indexer_0.4.0_aarch64.dmg`
+1. Install the DMG: `Slides Indexer_0.4.1_aarch64.dmg`
 2. Run from Terminal for logs: `/Applications/Slides\ Indexer.app/Contents/MacOS/Slides\ Indexer`
 3. Link folders, click "Rescan", and search your presentations!
 
@@ -34,6 +34,10 @@ npm run tauri build -- --debug  # Debug build with logs
   - **Scanned PDFs are cached**: OCR runs only once per PDF - subsequent scans reuse cached results
   - **Automatic cleanup**: Deleted files removed from cache automatically
   - **Two-tier verification**: Quick mod time check first, then checksum for changed files
+- **Cache Statistics** (v0.4.1): View cache metrics for each directory
+  - **Word count display**: See total words cached per directory
+  - **Cache size display**: Shows storage used in B/KB/MB/GB format
+  - **Real-time updates**: Stats refresh automatically on rescan
 - **Live Scan Details**: Real-time visual feedback during scanning
   - **Beautiful UI panel**: Shows detailed information for every file being processed
   - **OCR status indicator**: Purple magnifying glass icon when OCR is running
@@ -53,7 +57,7 @@ npm run tauri build -- --debug  # Debug build with logs
 
 Download the latest DMG from the releases:
 ```
-Slides Indexer_0.4.0_aarch64.dmg
+Slides Indexer_0.4.1_aarch64.dmg
 ```
 
 Install and run the app. The index is stored at:
@@ -94,13 +98,13 @@ npm run tauri:build
 The built app will be at:
 ```
 src-tauri/target/release/bundle/macos/Slides Indexer.app
-src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.0_aarch64.dmg
+src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
 ```
 
 **Debug build** (includes DevTools and verbose logging):
 ```
 src-tauri/target/debug/bundle/macos/Slides Indexer.app
-src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.0_aarch64.dmg
+src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
 ```
 
 ## Development
@@ -294,7 +298,19 @@ Native desktop application built with:
 
 ## 🆕 Recent Updates
 
-### v0.4.0 - Incremental Cache Saving (Latest)
+### v0.4.1 - Cache Statistics Display (Latest)
+- **📊 Directory Cache Metrics**
+  - Each directory now displays word count and cache size
+  - See how much content is cached at a glance
+  - Formatted with icons: 📝 for words, 💾 for storage size
+  - Example: "1,495,503 words • 9.56 MB"
+  
+- **🐛 Directory Filtering Fixes**
+  - Fixed search results for directories with spaces in names
+  - Improved path matching logic for better reliability
+  - Consistent filtering across all search operations
+
+### v0.4.0 - Incremental Cache Saving
 - **💾 Progressive Cache Persistence**
   - **Critical Fix**: Cache now saves after EACH file is indexed (not just at the end)
   - No more lost progress if scan is interrupted or app closes
@@ -506,7 +522,7 @@ npm run tauri:dev
 
 ## 📋 Summary
 
-**Slides Indexer v0.4.0** is a production-ready Tauri desktop application for macOS that solves the problem of searching through large collections of presentation files.
+**Slides Indexer v0.4.1** is a production-ready Tauri desktop application for macOS that solves the problem of searching through large collections of presentation files.
 
 ### Key Strengths
 
@@ -543,7 +559,7 @@ npm run tauri:dev
 
 ---
 
-**Current Version**: 0.4.0  
+**Current Version**: 0.4.1  
 **Platform**: macOS (Apple Silicon & Intel)  
 **License**: See repository for details  
-**Last Updated**: October 24, 2025
+**Last Updated**: October 25, 2025
