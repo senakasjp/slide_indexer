@@ -1,6 +1,6 @@
 # Slides Indexer
 
-**Version 0.4.1** - Native macOS desktop app for cataloging PowerPoint and PDF slide decks. Built with Tauri (Rust) + Svelte + Flowbite. Index, search, and preview presentation files with intelligent checksum-based caching and OCR support.
+**Version 0.4.2** - Native macOS desktop app for cataloging PowerPoint and PDF slide decks. Built with Tauri (Rust) + Svelte + Flowbite. Index, search, and preview presentation files with intelligent checksum-based caching and OCR support.
 
 > **⚠️ Tauri Desktop Application**: This is a **native desktop app** (not a web app). All debugging and troubleshooting should be done by running the app from Terminal to see console logs. There is no browser console - all logs appear in Terminal where you launch the app.
 
@@ -9,7 +9,7 @@
 > **📖 For a condensed reference guide, see [QUICK-REFERENCE.md](./QUICK-REFERENCE.md)**
 
 **For Users:**
-1. Install the DMG: `Slides Indexer_0.4.1_aarch64.dmg`
+1. Install the DMG: `Slides Indexer_0.4.2_aarch64.dmg`
 2. Run from Terminal for logs: `/Applications/Slides\ Indexer.app/Contents/MacOS/Slides\ Indexer`
 3. Link folders, click "Rescan", and search your presentations!
 
@@ -34,10 +34,17 @@ npm run tauri build -- --debug  # Debug build with logs
   - **Scanned PDFs are cached**: OCR runs only once per PDF - subsequent scans reuse cached results
   - **Automatic cleanup**: Deleted files removed from cache automatically
   - **Two-tier verification**: Quick mod time check first, then checksum for changed files
-- **Cache Statistics** (v0.4.1): View cache metrics for each directory
+- **Cache Statistics** (v0.4.1+): View cache metrics for each directory
   - **Word count display**: See total words cached per directory
   - **Cache size display**: Shows storage used in B/KB/MB/GB format
   - **Real-time updates**: Stats refresh automatically on rescan
+- **Native Desktop UI** (v0.4.2): Professional desktop application appearance
+  - **Solid backgrounds**: Clean, non-translucent design for better readability
+  - **Consistent styling**: All primary buttons use orange color scheme
+  - **Fixed-width layout**: Optimized for desktop screens (no responsive design)
+  - **Stop scan control**: Red stop button to halt active scans with visual feedback
+  - **Processing timer**: See how long each file takes to process
+  - **Version badge**: Prominent version display for easy verification
 - **Live Scan Details**: Real-time visual feedback during scanning
   - **Beautiful UI panel**: Shows detailed information for every file being processed
   - **OCR status indicator**: Purple magnifying glass icon when OCR is running
@@ -57,7 +64,7 @@ npm run tauri build -- --debug  # Debug build with logs
 
 Download the latest DMG from the releases:
 ```
-Slides Indexer_0.4.1_aarch64.dmg
+Slides Indexer_0.4.2_aarch64.dmg
 ```
 
 Install and run the app. The index is stored at:
@@ -98,13 +105,13 @@ npm run tauri:build
 The built app will be at:
 ```
 src-tauri/target/release/bundle/macos/Slides Indexer.app
-src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
+src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
 ```
 
 **Debug build** (includes DevTools and verbose logging):
 ```
 src-tauri/target/debug/bundle/macos/Slides Indexer.app
-src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
+src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
 ```
 
 ## Development
@@ -298,7 +305,26 @@ Native desktop application built with:
 
 ## 🆕 Recent Updates
 
-### v0.4.1 - Cache Statistics Display (Latest)
+### v0.4.2 - Native Desktop UI & Enhanced Controls (Latest)
+- **🎨 Professional Desktop Appearance**
+  - Transformed UI to look like a native desktop application
+  - Solid backgrounds, consistent orange buttons, subtle rounded corners
+  - Removed web-responsive design (mobile/tablet breakpoints)
+  - Fixed-width layout optimized for desktop screens
+  
+- **🛑 Scan Control & Feedback**
+  - **Stop scan button** - Halt active scans with immediate visual feedback
+  - **Processing timer** - See how long each file takes (with warnings for >10s)
+  - **Enhanced progress display** - "Starting scan..." immediately, retains last file for 2s
+  - **Clear cache confirmation** - Flowbite modal prevents accidental deletion
+  
+- **🎯 UI Improvements**
+  - Help button moved to header (top-right)
+  - Version badge prominently displayed next to title
+  - Better scan status messages for cached vs. scanned files
+  - Context-aware debug information display
+
+### v0.4.1 - Cache Statistics Display
 - **📊 Directory Cache Metrics**
   - Each directory now displays word count and cache size
   - See how much content is cached at a glance
@@ -559,7 +585,7 @@ npm run tauri:dev
 
 ---
 
-**Current Version**: 0.4.1  
+**Current Version**: 0.4.2  
 **Platform**: macOS (Apple Silicon & Intel)  
 **License**: See repository for details  
-**Last Updated**: October 25, 2025
+**Last Updated**: October 26, 2025

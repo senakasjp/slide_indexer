@@ -106,7 +106,7 @@ const THEME_STORAGE_KEY = 'slides-indexer:theme';
   };
 
 
-  const APP_VERSION = '0.4.1';
+  const APP_VERSION = '0.4.2';
 
   const DEFAULT_STATE: AppState = {
     directories: [],
@@ -126,7 +126,9 @@ const THEME_STORAGE_KEY = 'slides-indexer:theme';
   let isSearching = false;
   let isRescanning = false;
   let rescanningDirectory: string | null = null;
+  let scanStopped = false;
 let showDirectoryModal = false;
+let showClearCacheModal = false;
 let newDirectory = '';
 let lastIndexedAt: number | null = null;
 let loadError: string | null = null;
@@ -144,6 +146,9 @@ let removeScanListener: (() => void) | null = null;
 let currentScanPath: string | null = null;
 let currentScanStatus: string | null = null;
 let currentDebugInfo: string | null = null;
+let currentFileStartTime: number | null = null;
+let processingTimeInterval: ReturnType<typeof setInterval> | null = null;
+let processingTime = 0;
 let systemMediaQuery: MediaQueryList | null = null;
 let lastScanSummary: { total: number; scanned: number; cached: number } | null = null;
 let gridClass = 'grid gap-4';
@@ -223,9 +228,54 @@ const restoreSystemTheme = () => {
     try {
       const { listen } = await import('@tauri-apps/api/event');
       const unlisten = await listen<{ path: string | null; status: string | null; debugInfo: string | null }>('scan-progress', (event) => {
-        currentScanPath = event.payload?.path ?? null;
-        currentScanStatus = event.payload?.status ?? null;
-        currentDebugInfo = event.payload?.debugInfo ?? null;
+        // Ignore events if scan was stopped
+        if (scanStopped) {
+          return;
+        }
+        
+        const newPath = event.payload?.path ?? null;
+        const newStatus = event.payload?.status ?? null;
+        const newDebugInfo = event.payload?.debugInfo ?? null;
+        
+        // If it's a new file, start timer
+        if (newPath && newPath !== currentScanPath) {
+          currentFileStartTime = Date.now();
+          processingTime = 0;
+          
+          // Clear existing interval
+          if (processingTimeInterval) {
+            clearInterval(processingTimeInterval);
+          }
+          
+          // Start new interval to update processing time
+          processingTimeInterval = setInterval(() => {
+            if (currentFileStartTime) {
+              processingTime = Math.floor((Date.now() - currentFileStartTime) / 1000);
+            }
+          }, 1000);
+        }
+        
+        // Only update if new values are provided (don't clear on null from backend)
+        if (newPath) {
+          currentScanPath = newPath;
+        }
+        if (newStatus) {
+          currentScanStatus = newStatus;
+        }
+        if (newDebugInfo) {
+          currentDebugInfo = newDebugInfo;
+        }
+        
+        // Only clear everything if backend explicitly sends all nulls (scan complete)
+        if (newPath === null && newStatus === null && newDebugInfo === null) {
+          if (processingTimeInterval) {
+            clearInterval(processingTimeInterval);
+            processingTimeInterval = null;
+          }
+          currentFileStartTime = null;
+          processingTime = 0;
+          // Don't clear path/status/debug here - let the scan completion handler do it
+        }
       });
       removeScanListener = () => {
         unlisten();
@@ -240,6 +290,9 @@ const restoreSystemTheme = () => {
   onDestroy(() => {
     if (searchDebounce) {
       clearTimeout(searchDebounce);
+    }
+    if (processingTimeInterval) {
+      clearInterval(processingTimeInterval);
     }
     removeHashListener?.();
     removeThemeListener?.();
@@ -595,10 +648,18 @@ $: {
     }
     rescanningDirectory = null;
     isRescanning = true;
+    scanStopped = false;
     scanErrors = [];
     lastScanSummary = null;
     try {
       const summary = await rescanAllApi();
+      
+      // If user stopped scan, don't update state
+      if (scanStopped) {
+        await loadState();
+        return;
+      }
+      
       lastIndexedAt = summary.lastIndexedAt;
       if (summary.errors.length) {
         scanErrors = summary.errors;
@@ -616,9 +677,24 @@ $: {
         scanErrors = summary.errors;
       }
     } catch (error) {
-      scanErrors = [`Rescan failed: ${(error as Error).message}`];
+      if (!scanStopped) {
+        scanErrors = [`Rescan failed: ${(error as Error).message}`];
+      }
     } finally {
       isRescanning = false;
+      scanStopped = false;
+      // Clear scan progress after scan completes
+      setTimeout(() => {
+        currentScanPath = null;
+        currentScanStatus = null;
+        currentDebugInfo = null;
+        if (processingTimeInterval) {
+          clearInterval(processingTimeInterval);
+          processingTimeInterval = null;
+        }
+        currentFileStartTime = null;
+        processingTime = 0;
+      }, 2000); // Show last file for 2 seconds
     }
   };
 
@@ -693,10 +769,18 @@ $: {
     }
     isRescanning = true;
     rescanningDirectory = directory;
+    scanStopped = false;
     scanErrors = [];
     lastScanSummary = null;
     try {
       const summary = await rescanDirectoryApi(directory);
+      
+      // If user stopped scan, don't update state
+      if (scanStopped) {
+        await loadState();
+        return;
+      }
+      
       lastIndexedAt = summary.lastIndexedAt;
       if (summary.errors.length) {
         scanErrors = summary.errors;
@@ -714,10 +798,25 @@ $: {
         scanErrors = summary.errors;
       }
     } catch (error) {
-      scanErrors = [`Rescan failed: ${(error as Error).message}`];
+      if (!scanStopped) {
+        scanErrors = [`Rescan failed: ${(error as Error).message}`];
+      }
     } finally {
       rescanningDirectory = null;
       isRescanning = false;
+      scanStopped = false;
+      // Clear scan progress after scan completes
+      setTimeout(() => {
+        currentScanPath = null;
+        currentScanStatus = null;
+        currentDebugInfo = null;
+        if (processingTimeInterval) {
+          clearInterval(processingTimeInterval);
+          processingTimeInterval = null;
+        }
+        currentFileStartTime = null;
+        processingTime = 0;
+      }, 2000); // Show last file for 2 seconds
     }
   };
 
@@ -1060,15 +1159,13 @@ $: {
     return new Date(timestamp).toLocaleString();
   };
 
+  // Calculate cache statistics for a directory
   const getDirectoryStats = (directory: string): { wordCount: number; cacheSize: string } => {
-    // Get all items for this directory
-    // Items may have paths like "LECTURING/file.pptx" or just relative paths
-    // Directory might be a full path like "/Volumes/STORAGE/MEGA/LECTURING"
     // Extract the last component of the directory path for matching
+    // Directory might be "/Volumes/STORAGE/MEGA/LECTURING" but items have "LECTURING/file.pptx"
     const directoryName = directory.split('/').filter(Boolean).pop() ?? directory;
     
     const directoryItems = items.filter((item) => {
-      // Check if item path starts with the directory name or is within it
       const itemPath = item.path || '';
       const itemDir = itemPath.split('/')[0] ?? itemPath;
       
@@ -1095,7 +1192,7 @@ $: {
       if (item.keywords) {
         for (const keyword of item.keywords) {
           if (keyword) {
-            totalWords += 1; // Count each keyword as 1 word
+            totalWords += 1;
           }
         }
       }
@@ -1252,8 +1349,8 @@ $: {
     on:change={handleFolderSelect}
   />
 
-  <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur transition-colors dark:border-slate-800/80 dark:bg-slate-900/90">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 text-slate-600 transition-colors sm:px-6 dark:text-slate-200">
+  <header class="sticky top-0 z-20 border-b border-slate-200 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
+    <div class="flex flex-wrap items-center gap-3 px-4 py-2 text-slate-600 transition-colors dark:text-slate-200">
       <div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
         <span class="fa-solid fa-layer-group text-slate-400 dark:text-slate-500"></span>
         Slides Indexer
@@ -1267,7 +1364,7 @@ $: {
           </span>
         {/if}
       </div>
-      <div class="order-last w-full md:order-none md:flex-1 md:pr-4">
+      <div class="flex-1">
         <SearchInput
           id={HEADER_SEARCH_ID}
           placeholder="Search slides by keyword, phrase, or wildcard…"
@@ -1282,7 +1379,7 @@ $: {
         <Button
           size="sm"
           color="light"
-          class="shadow-sm !px-3 !py-2"
+          class="!px-3 !py-2"
           ariaLabel={themeToggleLabel}
           title={themeToggleLabel}
           on:click={() => {
@@ -1296,32 +1393,27 @@ $: {
         >
           <span class={`fa-solid ${themeToggleIcon}`}></span>
         </Button>
-        <Button size="sm" color="primary" class="shadow-sm" on:click={handleLinkClick}>
-          <span class="fa-solid fa-folder-plus me-2"></span>
-          {isOfflineMode ? 'Pick folder' : 'Link folder'}
-        </Button>
         <Button
           size="sm"
           color="light"
-          class="shadow-sm"
-          on:click={rescanAll}
-          disabled={isRescanning}
+          on:click={() => setView(view === 'help' ? 'index' : 'help')}
         >
-          {#if isRescanning}
-            <span class="fa-solid fa-circle-notch fa-spin me-2"></span>
-            Rescanning…
-          {:else}
-            <span class="fa-solid fa-rotate me-2"></span>
-            Rescan
-          {/if}
+          <span class="fa-solid {view === 'help' ? 'fa-grid-horizontal' : 'fa-circle-question'} me-2"></span>
+          {view === 'help' ? 'Back' : 'Help'}
         </Button>
       </div>
     </div>
   </header>
 
-  <main class="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
-    <section class="rounded-3xl border border-slate-200/80 bg-white/80 px-6 py-6 shadow-sm backdrop-blur transition-colors dark:border-slate-800/80 dark:bg-slate-900/80">
-      <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">Find any slide in seconds</h1>
+  <main class="space-y-4 px-4 py-6">
+    <section class="rounded-lg border border-slate-200 bg-white px-6 py-4 transition-colors dark:border-slate-700 dark:bg-slate-800">
+      <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">
+        Find any slide in seconds
+        <span class="ml-3 inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-xs font-normal text-slate-600 dark:bg-slate-700 dark:text-slate-400">
+          <span class="fa-solid fa-code-branch"></span>
+          {APP_VERSION}
+        </span>
+      </h1>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
         {formatCountLabel(directories.length, 'linked folder', 'linked folders')} · {formatCountLabel(items.length, 'indexed deck', 'indexed decks')} · Last update {formatTimestamp(lastIndexedAt)}
       </p>
@@ -1329,39 +1421,51 @@ $: {
         Index PowerPoint and PDF decks, preview slides instantly, and launch files in their native apps without digging through folders.
       </p>
       <div class="mt-6 flex flex-wrap items-center gap-2">
-        <Button size="sm" color="primary" class="shadow-sm" on:click={handleLinkClick}>
+        <Button size="sm" class="bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600" on:click={handleLinkClick}>
           <span class="fa-solid fa-folder-plus me-2"></span>
           {isOfflineMode ? 'Pick folder' : 'Link folder'}
         </Button>
-        <Button
-          size="sm"
-          color="light"
-          class="shadow-sm"
-          on:click={rescanAll}
-          disabled={isRescanning}
-        >
-          {#if isRescanning}
-            <span class="fa-solid fa-circle-notch fa-spin me-2"></span>
-            Rescanning…
-          {:else}
+        {#if isRescanning}
+          <Button
+            size="sm"
+            color="red"
+            on:click={() => {
+              scanStopped = true;
+              currentScanPath = null;
+              currentScanStatus = null;
+              currentDebugInfo = null;
+              if (processingTimeInterval) {
+                clearInterval(processingTimeInterval);
+                processingTimeInterval = null;
+              }
+              currentFileStartTime = null;
+              processingTime = 0;
+              scanErrors = ['Scan stopped by user. Files scanned before stopping were saved to cache.'];
+            }}
+            disabled={scanStopped}
+          >
+            {#if scanStopped}
+              <span class="fa-solid fa-circle-notch fa-spin me-2"></span>
+              Stopping…
+            {:else}
+              <span class="fa-solid fa-stop me-2"></span>
+              Stop scan
+            {/if}
+          </Button>
+        {:else}
+          <Button
+            size="sm"
+            color="light"
+            on:click={rescanAll}
+          >
             <span class="fa-solid fa-rotate me-2"></span>
             Rescan
-          {/if}
-        </Button>
-        <Button
-          size="sm"
-          color="light"
-          class="shadow-sm"
-          on:click={() => setView(view === 'help' ? 'index' : 'help')}
-        >
-          <span class="fa-solid {view === 'help' ? 'fa-grid-horizontal' : 'fa-circle-question'} me-2"></span>
-          {view === 'help' ? 'Back' : 'Help'}
-        </Button>
+          </Button>
+        {/if}
         <Button
           size="sm"
           color="red"
-          class="shadow-sm"
-          on:click={clearCache}
+          on:click={() => { showClearCacheModal = true; }}
           disabled={isRescanning}
         >
           <span class="fa-solid fa-trash me-2"></span>
@@ -1369,27 +1473,58 @@ $: {
         </Button>
       </div>
       
-      {#if isRescanning && currentScanPath}
+      {#if isRescanning}
         <div class="mt-3 space-y-3">
-          <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            {#if currentScanStatus === 'cached'}
-              <span class="fa-solid fa-check text-green-500"></span>
-            {:else if currentScanStatus === 'ocr'}
-              <span class="fa-solid fa-magnifying-glass text-purple-500" title="Running OCR"></span>
-            {:else if currentScanStatus === 'scanning'}
-              <span class="fa-solid fa-xmark text-orange-500"></span>
-            {:else}
-              <span class="fa-solid fa-circle-notch fa-spin text-primary-500"></span>
-            {/if}
-            <span class="break-all font-medium">{currentScanPath}</span>
-          </div>
-          {#if currentDebugInfo}
-            <div class="ml-6 space-y-2 rounded-lg border-l-4 {currentScanStatus === 'ocr' ? 'border-purple-400 bg-gradient-to-r from-purple-50 to-transparent dark:border-purple-500 dark:from-purple-900/20' : 'border-blue-400 bg-gradient-to-r from-blue-50 to-transparent dark:border-blue-500 dark:from-blue-900/20'} pl-4 pr-3 py-3">
+          {#if currentScanPath}
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                {#if currentScanStatus === 'cached'}
+                  <span class="fa-solid fa-check text-green-500"></span>
+                {:else if currentScanStatus === 'ocr'}
+                  <span class="fa-solid fa-magnifying-glass text-purple-500" title="Running OCR"></span>
+                {:else if currentScanStatus === 'scanning'}
+                  <span class="fa-solid fa-xmark text-orange-500"></span>
+                {:else}
+                  <span class="fa-solid fa-circle-notch fa-spin text-orange-500"></span>
+                {/if}
+                <span class="break-all font-medium">{currentScanPath}</span>
+              </div>
+              {#if processingTime > 0}
+                <div class="ml-6 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span class="fa-solid fa-clock"></span>
+                  <span>Processing for {processingTime} second{processingTime === 1 ? '' : 's'}...</span>
+                  {#if processingTime > 10}
+                    <span class="text-amber-600 dark:text-amber-400">(Large file or OCR in progress)</span>
+                  {/if}
+                </div>
+              {/if}
+              {#if !currentDebugInfo || !currentDebugInfo.trim()}
+                {#if currentScanStatus === 'cached'}
+                  <div class="ml-6 text-xs text-green-600 dark:text-green-400">
+                    <span class="fa-solid fa-check-circle me-1"></span>
+                    File retrieved from cache (no scan needed)
+                  </div>
+                {:else}
+                  <div class="ml-6 text-xs text-slate-400 dark:text-slate-500 italic">
+                    <span class="fa-solid fa-info-circle me-1"></span>
+                    Processing file...
+                  </div>
+                {/if}
+              {/if}
+            </div>
+          {:else}
+            <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <span class="fa-solid fa-circle-notch fa-spin text-orange-500"></span>
+              <span class="font-medium">Starting scan...</span>
+            </div>
+          {/if}
+          {#if currentDebugInfo && currentDebugInfo.trim()}
+            <div class="ml-6 space-y-2 rounded border-l-4 {currentScanStatus === 'ocr' ? 'border-purple-400 bg-purple-50 dark:border-purple-500 dark:bg-purple-900/20' : 'border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/20'} pl-4 pr-3 py-3">
               <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wide {currentScanStatus === 'ocr' ? 'text-purple-700 dark:text-purple-400' : 'text-blue-700 dark:text-blue-400'}">
                 <span class="fa-solid {currentScanStatus === 'ocr' ? 'fa-magnifying-glass' : 'fa-info-circle'}"></span>
                 <span>{currentScanStatus === 'ocr' ? 'OCR Processing' : 'Scan Details'}</span>
               </div>
-              <div class="space-y-1.5 text-xs leading-relaxed">
+              <div class="space-y-1.5 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
                 {#each currentDebugInfo.split('\n') as line}
                   {#if line.includes('━━━━━━━━━━━━━━━━━━━━━━')}
                     <div class="my-3 border-t-2 border-dashed border-purple-300 dark:border-purple-600"></div>
@@ -1488,21 +1623,21 @@ $: {
       {/if}
     </section>
 
-    <section class="grid gap-4 md:grid-cols-3">
-      <article class="rounded-2xl border border-slate-200 bg-white/70 px-5 py-4 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Directories</span>
+    <section class="grid grid-cols-3 gap-3">
+      <article class="rounded border border-slate-200 bg-white px-4 py-3 transition-colors dark:border-slate-700 dark:bg-slate-800">
+        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Directories</span>
         <p class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{directories.length.toLocaleString()}</p>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Organise your decks by linking one or many root folders.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Organise your decks by linking one or many root folders.</p>
       </article>
-      <article class="rounded-2xl border border-slate-200 bg-white/70 px-5 py-4 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Indexed decks</span>
+      <article class="rounded border border-slate-200 bg-white px-4 py-3 transition-colors dark:border-slate-700 dark:bg-slate-800">
+        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Indexed decks</span>
         <p class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{items.length.toLocaleString()}</p>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Each deck is parsed for fast keyword and slide-level search.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Each deck is parsed for fast keyword and slide-level search.</p>
       </article>
-      <article class="rounded-2xl border border-slate-200 bg-white/70 px-5 py-4 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Last indexed</span>
+      <article class="rounded border border-slate-200 bg-white px-4 py-3 transition-colors dark:border-slate-700 dark:bg-slate-800">
+        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Last indexed</span>
         <p class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatTimestamp(lastIndexedAt)}</p>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Kick off a rescan any time decks are updated.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Kick off a rescan any time decks are updated.</p>
       </article>
     </section>
 
@@ -1544,7 +1679,7 @@ $: {
     {/if}
 
     {#if view === 'help'}
-      <div class="rounded-3xl border border-slate-200 bg-white/80 px-6 py-6 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80">
+      <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 transition-colors dark:border-slate-700 dark:bg-slate-800">
         <HelpContent />
       </div>
     {:else}
@@ -1571,9 +1706,9 @@ $: {
               </div>
             {/if}
           </div>
-          <div class="rounded-3xl border border-slate-200 bg-white/80 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80">
+          <div class="rounded-lg border border-slate-200 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
             {#if directories.length}
-              <ul class="divide-y divide-slate-200 dark:divide-slate-700/80">
+              <ul class="divide-y divide-slate-200 dark:divide-slate-700">
                 {#each directories as directory}
                   {@const stats = getDirectoryStats(directory)}
                   <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition hover:bg-slate-50 dark:hover:bg-slate-800/80">
@@ -1659,19 +1794,19 @@ $: {
           </div>
 
           {#if !hasActiveQuery}
-            <div class="rounded-3xl border border-slate-200 bg-white/80 px-6 py-8 text-sm text-slate-600 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
+            <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               Start typing in the search bar above to find matching decks.
             </div>
           {:else if !filteredItems.length}
-            <div class="rounded-3xl border border-slate-200 bg-white/80 px-6 py-8 text-sm text-slate-600 shadow-sm backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
+            <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               {query.trim()
                 ? 'No results matched your search. Try removing filters or checking spelling.'
                 : 'No decks indexed yet. Link a directory or rescan to populate results.'}
             </div>
           {:else}
-            <div class={`auto-rows-fr ${gridClass} md:grid-cols-2 xl:grid-cols-3`}>
+            <div class={`auto-rows-fr ${gridClass} grid-cols-3`}>
               {#each filteredItems as item (item.id)}
-                <article class="flex h-full flex-col gap-4 rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/80 dark:hover:bg-slate-900">
+                <article class="flex h-full flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/50">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0 space-y-1">
                       <h3 class="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">{item.name}</h3>
@@ -1806,6 +1941,35 @@ $: {
     </div>
     <div slot="footer" class="flex justify-end">
       <Button color="light" on:click={closePreview}>Close</Button>
+    </div>
+  </Modal>
+
+  <Modal bind:open={showClearCacheModal} size="md" on:close={() => { showClearCacheModal = false; }}>
+    <div slot="header" class="text-lg font-semibold text-slate-800 dark:text-slate-100">
+      Clear Cache
+    </div>
+    <div class="space-y-4">
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Are you sure you want to clear the cache? This will remove all indexed data and require a complete rescan of all linked directories.
+      </p>
+      <div class="rounded border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-900/30">
+        <div class="flex items-start gap-2">
+          <span class="fa-solid fa-exclamation-triangle text-amber-600 dark:text-amber-400 mt-0.5"></span>
+          <div class="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Warning:</strong> All cached checksums, OCR results, and indexed content will be permanently removed. This action cannot be undone.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div slot="footer" class="flex justify-end gap-2">
+      <Button color="light" on:click={() => { showClearCacheModal = false; }}>Cancel</Button>
+      <Button color="red" on:click={async () => {
+        showClearCacheModal = false;
+        await clearCache();
+      }}>
+        <span class="fa-solid fa-trash me-2"></span>
+        Clear Cache
+      </Button>
     </div>
   </Modal>
 </div>

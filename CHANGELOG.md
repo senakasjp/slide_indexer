@@ -2,6 +2,85 @@
 
 All notable changes to Slides Indexer will be documented in this file.
 
+## [0.4.2] - 2025-10-26
+
+### 🎨 Native Desktop UI Transformation
+- **Professional Desktop Appearance**
+  - Removed web-responsive design elements (mobile/tablet breakpoints)
+  - Solid backgrounds instead of translucent/blurred effects
+  - Subtle rounded corners (`rounded-lg`) instead of aggressive rounding
+  - Fixed-width layout optimized for desktop screens
+  - Removed responsive padding and margins (no `md:`, `sm:`, `xl:` classes)
+  
+- **Visual Consistency**
+  - All primary action buttons now use consistent orange color (`bg-orange-500`, `hover:bg-orange-600`)
+  - Search button, Link folder, and Rescan buttons all match
+  - Removed gradient effects for cleaner, flatter design
+  - Professional desktop application aesthetic throughout
+
+### 🛑 Scan Control & Feedback
+- **Stop Scan Button**
+  - Appears when scanning is active, replacing Rescan button
+  - Immediately stops UI updates and clears scan progress
+  - Shows "Stopping..." state with spinner during cancellation
+  - Red color scheme for clear distinction from other actions
+  
+- **Processing Time Indicator**
+  - Real-time timer shows how long each file is being processed
+  - Displays "Processing for X seconds..." during scan
+  - Warning indicator for files taking longer than 10 seconds
+  - Helps identify slow OCR operations and large files
+  
+- **Enhanced Scan Progress Display**
+  - Shows "Starting scan..." immediately when scan begins
+  - Retains last processed file path for 2 seconds after completion
+  - Distinguishes between cached files (green ✓) and scanned files (orange ✗)
+  - Clear message: "File retrieved from cache (no scan needed)" for cached items
+  - "Processing file..." message for actively scanned items
+
+### 🔒 Safety & Confirmation
+- **Clear Cache Confirmation Modal**
+  - Flowbite modal dialog before clearing cache
+  - Warning message about permanent data removal
+  - Cancel and Confirm buttons with color-coded actions
+  - Prevents accidental cache deletion
+
+### 🎯 UI Reorganization
+- **Header Improvements**
+  - Help button moved to header (top-right)
+  - Link folder and Rescan/Stop buttons moved to main content area
+  - Cleaner header with just title, version badge, and Help
+  - Better visual hierarchy
+
+### 🔢 Version Display
+- **Prominent Version Badge**
+  - Version number (`0.4.1-fix3` → `0.4.2`) displayed in header
+  - Small badge with tool/wrench icon next to main title
+  - Easy verification of installed version
+  - Helpful for troubleshooting and support
+
+### 🐛 Bug Fixes
+- **Scan Progress Reliability**
+  - Fixed issue where scan path and debug log were not consistently displayed
+  - Event listener now properly handles `undefined` vs `null` payloads
+  - Scan progress displays immediately and persists until completion
+  - Stop button correctly clears all scan state
+  
+- **Processing Time Tracking**
+  - Timer automatically starts/stops when files change
+  - Properly clears when scan completes or is stopped
+  - No memory leaks from lingering intervals
+
+### 🔧 Technical Changes
+- Added `scanStopped` state for immediate UI feedback
+- Added `currentFileStartTime` and `processingTime` for time tracking
+- Added `showClearCacheModal` state for confirmation dialog
+- Improved event listener logic to prevent premature state clearing
+- Added 2-second delay before clearing scan progress after completion
+- Enhanced status display with context-aware messages
+
+---
+
 ## [0.4.1] - 2025-10-25
 
 ### 📊 Cache Statistics Display
@@ -285,11 +364,11 @@ brew install poppler tesseract  # For OCR support
 
 # Debug build (recommended for development)
 npm run tauri build -- --debug
-# Output: src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
+# Output: src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
 
 # Release build (optimized)
 npm run tauri build
-# Output: src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.1_aarch64.dmg
+# Output: src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
 ```
 
 ### Testing & Debugging
@@ -320,8 +399,8 @@ npm run tauri:dev
 
 ---
 
-**Current Stable Version**: 0.4.1  
+**Current Stable Version**: 0.4.2  
 **Platform**: macOS (Apple Silicon & Intel)  
-**Build Date**: October 25, 2025
+**Build Date**: October 26, 2025
 
 

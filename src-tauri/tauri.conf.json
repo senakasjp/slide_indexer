@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "Slides Indexer",
-    "version": "0.4.1"
+    "version": "0.4.2"
   },
   "build": {
     "beforeBuildCommand": "npm run build",

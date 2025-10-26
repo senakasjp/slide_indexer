@@ -1,13 +1,13 @@
 # Slides Indexer - Quick Reference Guide
 
-**Version 0.4.1** | **Tauri Desktop Application** | **macOS Only**
+**Version 0.4.2** | **Tauri Desktop Application** | **macOS Only**
 
 ## 🚀 Getting Started
 
 ### Installation
 ```bash
 # Install from DMG
-Slides Indexer_0.4.1_aarch64.dmg
+Slides Indexer_0.4.2_aarch64.dmg
 
 # Run with console logs
 /Applications/Slides\ Indexer.app/Contents/MacOS/Slides\ Indexer
@@ -31,6 +31,7 @@ Slides Indexer_0.4.1_aarch64.dmg
 ```
 Rescan → Scans ALL linked folders
 [📁 folder icon] → Rescans ONE specific folder
+Stop scan → Halts active scan (replaces Rescan button during scan)
 ```
 
 ### View Console Logs
@@ -40,11 +41,17 @@ Rescan → Scans ALL linked folders
 ```
 
 ### Clear Cache
-Click "Clear Cache" button → Forces complete re-index on next scan
+Click "Clear Cache" button → Confirmation modal appears → Confirm to clear cache
 
 ## 📊 Understanding Scan Status
 
-### Cache Statistics (v0.4.1)
+### Version Badge (v0.4.2)
+- Displayed in header next to app title
+- Current version: `0.4.2`
+- Small badge with wrench/tool icon
+- Helpful for verifying installed version
+
+### Cache Statistics (v0.4.1+)
 Each directory in the list shows:
 - **📝 Word count** - Total words cached (e.g., "1,495,503 words")
 - **💾 Cache size** - Storage used (e.g., "9.56 MB")
@@ -54,6 +61,21 @@ Each directory in the list shows:
 - ✅ **Green checkmark** - File cached (skipped)
 - 🔍 **Purple magnifying glass** - OCR running (extracting text from images)
 - ✗ **Orange cross** - File being scanned/re-scanned
+
+### Processing Time (v0.4.2)
+During active scans, the UI shows:
+- "Processing for X seconds..." - Real-time timer for current file
+- Warning indicator for files taking longer than 10 seconds
+- Helps identify slow OCR operations or large files
+- Timer resets automatically when switching to next file
+
+### Scan Progress Display (v0.4.2)
+- **Starting scan...** - Appears immediately when scan begins
+- **File path with status icon** - Shows current file being processed
+- **Status messages**:
+  - "File retrieved from cache (no scan needed)" - Cached files (green ✓)
+  - "Processing file..." - Actively scanned files (orange ✗)
+- Progress display persists for 2 seconds after scan completes
 
 ### Console Messages
 ```
@@ -85,7 +107,51 @@ Checksum: Some("be53190d")
 ⏳ This may take a few moments
 ```
 
+## 🎨 UI Features (v0.4.2)
+
+### Native Desktop Appearance
+- **Solid backgrounds** - No translucent effects
+- **Consistent orange buttons** - All primary actions use same color
+- **Subtle rounded corners** - Professional, not overly rounded
+- **Fixed-width layout** - Optimized for desktop (no responsive design)
+- **Clean header** - Title, version badge, and Help button only
+
+### Action Buttons
+- **Link folder** - Orange button, adds new directories
+- **Rescan** - Orange button, indexes all linked folders
+- **Stop scan** - Red button (replaces Rescan during active scan)
+- **Clear Cache** - Dark red button, shows confirmation modal
+- **Help** - Located in header (top-right corner)
+
+### Confirmation Modals
+- **Clear Cache** - Warning modal before clearing
+  - Explains that action is permanent
+  - "Cancel" button to abort
+  - "Clear Cache" button to confirm (red)
+
 ## 🐛 Troubleshooting
+
+### Scan Progress Not Showing
+**Symptoms:**
+- "Starting scan..." appears but no file paths
+- Files are being scanned (console shows activity) but UI is blank
+
+**Causes & Solutions:**
+- **Normal for cached files**: Green checkmark (✓) files don't show detailed progress
+- **Clear cache first**: Click "Clear Cache" → Confirm → Rescan to see full debug logs
+- **Check version**: Look for version badge in header (should show `0.4.2`)
+
+### Stop Scan Not Working
+**Expected behavior:**
+- Click "Stop scan" → Button shows "Stopping..." with spinner
+- Scan progress clears immediately
+- Backend may continue briefly (can't instantly kill OCR processes)
+- UI stops updating with new files
+
+**If not working:**
+- Check version badge (should be `0.4.2`)
+- Run from Terminal to see console logs
+- Look for "Scan stopped by user" message
 
 ### File Always Shows "New File Detected"
 
@@ -196,9 +262,30 @@ npm run tauri build
 - **[CACHING-NOTES.md](./CACHING-NOTES.md)** - Technical deep-dive on caching
 - **[TESTING-GUIDE.md](./TESTING-GUIDE.md)** - Testing procedures and verification
 
+## 🎯 Best Practices
+
+### When to Clear Cache
+- Search results seem outdated or incorrect
+- Want to see full scan progress with debug logs
+- Troubleshooting caching issues
+- After major app update
+
+### When to Use Stop Scan
+- Accidentally started scan on wrong directory
+- Need to make changes before scan completes
+- Testing/debugging specific files
+- Long OCR scan needs to be interrupted
+
+### Verifying Installation
+1. Check version badge in header → Should show `0.4.2`
+2. Click "Clear Cache" → Modal should appear (not immediate action)
+3. Start a rescan → "Stop scan" button should appear (red)
+4. Look for orange buttons (Link folder, Rescan, Search)
+5. Check UI has solid backgrounds (not translucent)
+
 ---
 
-**Version**: 0.4.1  
+**Version**: 0.4.2  
 **Platform**: macOS (Apple Silicon & Intel)  
 **App Type**: Tauri Desktop Application  
 **Console Logs**: Required for debugging (run from Terminal)
