@@ -22,6 +22,8 @@ pub struct SlideIndexItem {
     pub slides: Vec<SlidePreview>,
     #[serde(default)]
     pub checksum: Option<String>,
+    #[serde(default)]
+    pub document_type: Option<DocumentType>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,6 +72,13 @@ pub enum SlideKind {
     Pptx,
     Pdf,
     Ppt,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DocumentType {
+    Presentation,
+    Book,
 }
 
 impl Default for AppState {

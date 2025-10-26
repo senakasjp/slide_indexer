@@ -1,6 +1,6 @@
 # Slides Indexer
 
-**Version 0.4.2** - Native macOS desktop app for cataloging PowerPoint and PDF slide decks. Built with Tauri (Rust) + Svelte + Flowbite. Index, search, and preview presentation files with intelligent checksum-based caching and OCR support.
+**Version 0.4.3** - Native macOS desktop app for cataloging PowerPoint and PDF slide decks. Built with Tauri (Rust) + Svelte + Flowbite. Index, search, and preview presentation files with intelligent checksum-based caching, OCR support, and automatic document type detection.
 
 > **⚠️ Tauri Desktop Application**: This is a **native desktop app** (not a web app). All debugging and troubleshooting should be done by running the app from Terminal to see console logs. There is no browser console - all logs appear in Terminal where you launch the app.
 
@@ -9,7 +9,7 @@
 > **📖 For a condensed reference guide, see [QUICK-REFERENCE.md](./QUICK-REFERENCE.md)**
 
 **For Users:**
-1. Install the DMG: `Slides Indexer_0.4.2_aarch64.dmg`
+1. Install the DMG: `Slides Indexer_0.4.3_aarch64.dmg`
 2. Run from Terminal for logs: `/Applications/Slides\ Indexer.app/Contents/MacOS/Slides\ Indexer`
 3. Link folders, click "Rescan", and search your presentations!
 
@@ -38,6 +38,12 @@ npm run tauri build -- --debug  # Debug build with logs
   - **Word count display**: See total words cached per directory
   - **Cache size display**: Shows storage used in B/KB/MB/GB format
   - **Real-time updates**: Stats refresh automatically on rescan
+- **Document Type Detection** (v0.4.3): Smart classification of presentations vs books
+  - **Automatic detection**: PDFs classified by page orientation (landscape = presentations, portrait = books)
+  - **Visual badges**: 📊 Blue badge for presentations, 📚 Green badge for books
+  - **Filter buttons**: "All", "Presentations", "Books" - work without searching
+  - **PowerPoint files**: Always classified as presentations
+  - **Smart terminology**: Shows "pages" for books, "slides" for presentations throughout UI
 - **Native Desktop UI** (v0.4.2): Professional desktop application appearance
   - **Solid backgrounds**: Clean, non-translucent design for better readability
   - **Consistent styling**: All primary buttons use orange color scheme
@@ -64,7 +70,7 @@ npm run tauri build -- --debug  # Debug build with logs
 
 Download the latest DMG from the releases:
 ```
-Slides Indexer_0.4.2_aarch64.dmg
+Slides Indexer_0.4.3_aarch64.dmg
 ```
 
 Install and run the app. The index is stored at:
@@ -105,13 +111,13 @@ npm run tauri:build
 The built app will be at:
 ```
 src-tauri/target/release/bundle/macos/Slides Indexer.app
-src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
+src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.3_aarch64.dmg
 ```
 
 **Debug build** (includes DevTools and verbose logging):
 ```
 src-tauri/target/debug/bundle/macos/Slides Indexer.app
-src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
+src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.3_aarch64.dmg
 ```
 
 ## Development
@@ -144,11 +150,11 @@ npm run tauri build
 ## 🚀 Usage
 
 ### Basic Workflow
-1. **Link Folders**: Click "Link folder" to add directories containing your presentation files
+1. **Link Folders**: Click "Link folder" to add directories containing your documents
 2. **Manual Indexing**: Click "Rescan" button to scan and index all PowerPoint and PDF files
-3. **Search**: Use the search bar to find slides by content, keywords, or phrases
-4. **Preview**: Click any result to see slide previews with highlighted matches
-5. **Open Files**: Click the file icon to open presentations in their native applications
+3. **Search**: Use the search bar to find documents by content, keywords, or phrases
+4. **Preview**: Click any result to see page/slide previews with highlighted matches
+5. **Open Files**: Click the file icon to open documents in their native applications
 
 **Note**: Linking folders no longer triggers automatic scanning. Use the "Rescan" button when you're ready to index files.
 
@@ -305,7 +311,28 @@ Native desktop application built with:
 
 ## 🆕 Recent Updates
 
-### v0.4.2 - Native Desktop UI & Enhanced Controls (Latest)
+### v0.4.3 - Document Type Detection (Latest)
+- **📚 Smart Classification**
+  - Automatically distinguishes between presentations and books
+  - PDF page orientation detection (landscape = presentations, portrait = books)
+  - Perfect for separating Beamer slides from Calibre Library books
+  - PowerPoint files (PPTX/PPT) always classified as presentations
+  
+- **🎯 Visual Indicators & Filtering**
+  - 📊 Blue "Presentation" badges for slides and decks
+  - 📚 Green "Book" badges for books and documents
+  - Three filter buttons: "All", "Presentations", "Books"
+  - Works immediately - no search required, click to see all documents of that type
+  - Instantly filter search results by document type when searching
+  - Filters work alongside directory and search query filters
+
+- **📄 Context-Aware Terminology**
+  - Preview modal shows "Page 1, Page 2..." for books
+  - Preview modal shows "Slide 1, Slide 2..." for presentations
+  - Search results display "5 pages" or "12 slides" accordingly
+  - All UI labels automatically adapt to document type
+
+### v0.4.2 - Native Desktop UI & Enhanced Controls
 - **🎨 Professional Desktop Appearance**
   - Transformed UI to look like a native desktop application
   - Solid backgrounds, consistent orange buttons, subtle rounded corners
@@ -585,7 +612,7 @@ npm run tauri:dev
 
 ---
 
-**Current Version**: 0.4.2  
+**Current Version**: 0.4.3  
 **Platform**: macOS (Apple Silicon & Intel)  
 **License**: See repository for details  
 **Last Updated**: October 26, 2025

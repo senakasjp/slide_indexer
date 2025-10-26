@@ -106,7 +106,7 @@ const THEME_STORAGE_KEY = 'slides-indexer:theme';
   };
 
 
-  const APP_VERSION = '0.4.2';
+  const APP_VERSION = '0.4.3';
 
   const DEFAULT_STATE: AppState = {
     directories: [],
@@ -149,6 +149,7 @@ let currentDebugInfo: string | null = null;
 let currentFileStartTime: number | null = null;
 let processingTimeInterval: ReturnType<typeof setInterval> | null = null;
 let processingTime = 0;
+let documentTypeFilter: 'all' | 'presentation' | 'book' = 'all';
 let systemMediaQuery: MediaQueryList | null = null;
 let lastScanSummary: { total: number; scanned: number; cached: number } | null = null;
 let gridClass = 'grid gap-4';
@@ -199,6 +200,41 @@ const restoreSystemTheme = () => {
   };
 
   const getKindMeta = (kind: SlideIndexItem['kind']): KindMeta => KIND_META[kind];
+
+  type BadgeColor = 'blue' | 'green' | 'red' | 'yellow' | 'indigo' | 'purple' | 'pink' | 'primary' | 'dark' | 'none';
+  type DocumentTypeMeta = { label: string; icon: string; color: BadgeColor };
+  const DOCUMENT_TYPE_META: Record<'presentation' | 'book', DocumentTypeMeta> = {
+    presentation: { label: 'Presentation', icon: 'fa-presentation-screen', color: 'blue' as BadgeColor },
+    book: { label: 'Book', icon: 'fa-book', color: 'green' as BadgeColor }
+  };
+
+  const getDocumentTypeMeta = (docType: 'presentation' | 'book' | undefined): DocumentTypeMeta | null => {
+    if (!docType) return null;
+    return DOCUMENT_TYPE_META[docType] || null;
+  };
+
+  const handleDocumentTypeFilterChange = (filter: 'all' | 'presentation' | 'book') => {
+    documentTypeFilter = filter;
+    
+    // Refresh search results with new filter
+    if (hasActiveQuery) {
+      const trimmed = query.trim();
+      if (isOfflineMode) {
+        filteredItems = filterLocalItems(trimmed);
+      } else {
+        startSearch(trimmed, true);
+      }
+    } else {
+      // If no search query, show all items filtered by document type
+      hasActiveQuery = true;
+      query = '';
+      if (isOfflineMode) {
+        filteredItems = filterLocalItems('');
+      } else {
+        startSearch('', true);
+      }
+    }
+  };
 
   onMount(async () => {
   if (typeof window !== 'undefined') {
@@ -430,6 +466,11 @@ $: {
     }
     // If all directories selected, don't filter (show all)
     
+    // Filter by document type
+    if (documentTypeFilter !== 'all') {
+      results = results.filter((item) => item.documentType === documentTypeFilter);
+    }
+    
     // Filter by search query
     if (parsed.isEmpty) {
       return results;
@@ -466,6 +507,11 @@ $: {
         });
       }
       // If all directories selected, don't filter (show all)
+      
+      // Filter by document type
+      if (documentTypeFilter !== 'all') {
+        sanitised = sanitised.filter((item) => item.documentType === documentTypeFilter);
+      }
       
       filteredItems = sanitised;
       lastIndexedAt = result.lastIndexedAt;
@@ -1415,7 +1461,7 @@ $: {
         </span>
       </h1>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        {formatCountLabel(directories.length, 'linked folder', 'linked folders')} · {formatCountLabel(items.length, 'indexed deck', 'indexed decks')} · Last update {formatTimestamp(lastIndexedAt)}
+        {formatCountLabel(directories.length, 'linked folder', 'linked folders')} · {formatCountLabel(items.length, 'indexed document', 'indexed documents')} · Last update {formatTimestamp(lastIndexedAt)}
       </p>
       <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
         Index PowerPoint and PDF decks, preview slides instantly, and launch files in their native apps without digging through folders.
@@ -1793,15 +1839,47 @@ $: {
             </div>
           </div>
 
+          <!-- Document Type Filter Buttons -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm text-slate-600 dark:text-slate-400">Document type:</span>
+            <Button
+              size="xs"
+              color={documentTypeFilter === 'all' ? 'blue' : 'light'}
+              on:click={() => handleDocumentTypeFilterChange('all')}
+              class="!px-3 !py-1.5"
+            >
+              <span class="fa-solid fa-list me-1"></span>
+              All
+            </Button>
+            <Button
+              size="xs"
+              color={documentTypeFilter === 'presentation' ? 'blue' : 'light'}
+              on:click={() => handleDocumentTypeFilterChange('presentation')}
+              class="!px-3 !py-1.5"
+            >
+              <span class="fa-solid fa-presentation-screen me-1"></span>
+              Presentations
+            </Button>
+            <Button
+              size="xs"
+              color={documentTypeFilter === 'book' ? 'green' : 'light'}
+              on:click={() => handleDocumentTypeFilterChange('book')}
+              class="!px-3 !py-1.5"
+            >
+              <span class="fa-solid fa-book me-1"></span>
+              Books
+            </Button>
+          </div>
+
           {#if !hasActiveQuery}
             <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              Start typing in the search bar above to find matching decks.
+              Start typing in the search bar above to find matching documents.
             </div>
           {:else if !filteredItems.length}
             <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               {query.trim()
                 ? 'No results matched your search. Try removing filters or checking spelling.'
-                : 'No decks indexed yet. Link a directory or rescan to populate results.'}
+                : 'No documents indexed yet. Link a directory or rescan to populate results.'}
             </div>
           {:else}
             <div class={`auto-rows-fr ${gridClass} grid-cols-3`}>
@@ -1812,16 +1890,27 @@ $: {
                       <h3 class="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">{item.name}</h3>
                       <p class="truncate text-xs text-slate-500 dark:text-slate-300">{item.path}</p>
                     </div>
-                    <Badge color="light" class="whitespace-nowrap dark:bg-slate-800 dark:text-slate-200">
-                      <span class={`fa-solid ${getKindMeta(item.kind).icon} me-1`}></span>
-                      {getKindMeta(item.kind).label}
-                    </Badge>
+                    <div class="flex flex-wrap gap-2">
+                      <Badge color="light" class="whitespace-nowrap dark:bg-slate-800 dark:text-slate-200">
+                        <span class={`fa-solid ${getKindMeta(item.kind).icon} me-1`}></span>
+                        {getKindMeta(item.kind).label}
+                      </Badge>
+                      {#if item.documentType}
+                        {@const docMeta = getDocumentTypeMeta(item.documentType)}
+                        {#if docMeta}
+                          <Badge color={docMeta.color} class="whitespace-nowrap">
+                            <span class={`fa-solid ${docMeta.icon} me-1`}></span>
+                            {docMeta.label}
+                          </Badge>
+                        {/if}
+                      {/if}
+                    </div>
                   </div>
 
                   <div class="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-300">
                     <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800/80">
                       <span class="fa-solid fa-layer-group text-slate-400 dark:text-slate-500"></span>
-                      {item.slideCount ?? '—'} slide{item.slideCount === 1 ? '' : 's'}
+                      {item.slideCount ?? '—'} {item.documentType === 'book' ? 'page' : 'slide'}{item.slideCount === 1 ? '' : 's'}
                     </span>
                     <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800/80">
                       <span class="fa-solid fa-calendar-plus text-slate-400 dark:text-slate-500"></span>
@@ -1923,7 +2012,9 @@ $: {
       {#if selectedSlides.length}
         {#each selectedSlides as slide}
           <Card size="none" class="shadow-sm">
-            <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Slide {slide.index}</h4>
+            <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {selectedItem?.documentType === 'book' ? 'Page' : 'Slide'} {slide.index}
+            </h4>
             <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
               {@html highlightSearchTerms(slide.text, query)}
             </p>
@@ -1935,7 +2026,7 @@ $: {
         </p>
       {:else}
         <p class="text-sm text-slate-500">
-          No preview available for this deck.
+          No preview available for this document.
         </p>
       {/if}
     </div>

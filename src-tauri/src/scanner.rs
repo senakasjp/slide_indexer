@@ -645,6 +645,7 @@ fn index_pptx(path: &PathBuf, modified_at: Option<u64>, checksum: Option<String>
         updated_at: modified_at.unwrap_or_else(current_timestamp),
         slides: previews,
         checksum,
+        document_type: Some(crate::models::DocumentType::Presentation),  // PPTX files are always presentations
     })
 }
 
@@ -743,6 +744,15 @@ fn index_pdf(
     };
     let snippet = truncate_snippet(&snippet_source);
 
+    // Determine document type based on page orientation
+    let document_type = contents.is_landscape.map(|is_landscape| {
+        if is_landscape {
+            crate::models::DocumentType::Presentation
+        } else {
+            crate::models::DocumentType::Book
+        }
+    });
+    
     Ok(SlideIndexItem {
         id: hash_of(path.to_string_lossy()),
         path: path.to_string_lossy().to_string(),
@@ -757,6 +767,7 @@ fn index_pdf(
         updated_at: modified_at.unwrap_or_else(current_timestamp),
         slides: previews,
         checksum,
+        document_type,
     })
 }
 
@@ -802,6 +813,7 @@ fn index_ppt(path: &PathBuf, modified_at: Option<u64>, checksum: Option<String>)
         updated_at: modified_at.unwrap_or_else(current_timestamp),
         slides: previews,
         checksum,
+        document_type: Some(crate::models::DocumentType::Presentation),  // PPT files are always presentations
     })
 }
 
@@ -809,6 +821,7 @@ struct PdfContents {
     text: String,
     page_count: Option<usize>,
     pages: Vec<String>,
+    is_landscape: Option<bool>,
 }
 
 fn extract_pdf_contents(buffer: &[u8]) -> PdfContents {
@@ -868,10 +881,35 @@ fn extract_pdf_contents(buffer: &[u8]) -> PdfContents {
         }
     }
 
+    let is_landscape = detect_pdf_orientation(&content);
+    
     PdfContents {
         text: segments.join(" "),
         page_count,
         pages: segments,
+        is_landscape,
+    }
+}
+
+fn detect_pdf_orientation(content: &str) -> Option<bool> {
+    // Look for MediaBox in PDF structure: /MediaBox [x1 y1 x2 y2]
+    // x2-x1 = width, y2-y1 = height
+    // landscape = width > height
+    
+    let mediabox_regex = regex::Regex::new(r"/MediaBox\s*\[\s*(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s*\]").ok()?;
+    
+    if let Some(caps) = mediabox_regex.captures(content) {
+        let x1: f64 = caps.get(1)?.as_str().parse().ok()?;
+        let y1: f64 = caps.get(2)?.as_str().parse().ok()?;
+        let x2: f64 = caps.get(3)?.as_str().parse().ok()?;
+        let y2: f64 = caps.get(4)?.as_str().parse().ok()?;
+        
+        let width = (x2 - x1).abs();
+        let height = (y2 - y1).abs();
+        
+        Some(width > height)
+    } else {
+        None
     }
 }
 

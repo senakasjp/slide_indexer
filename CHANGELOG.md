@@ -2,6 +2,43 @@
 
 All notable changes to Slides Indexer will be documented in this file.
 
+## [0.4.3] - 2025-10-26
+
+### 📚 Document Type Detection
+- **Automatic Classification**
+  - PDFs automatically classified as "Presentation" or "Book" based on page orientation
+  - Landscape PDFs (width > height) = Presentations (Beamer slides)
+  - Portrait PDFs (height > width) = Books (Calibre Library, documents)
+  - PowerPoint files (PPTX/PPT) always classified as Presentations
+  
+- **Visual Indicators**
+  - 📊 Blue "Presentation" badge for slides and decks
+  - 📚 Green "Book" badge for books and documents
+  - Badges displayed next to file type in search results
+  
+- **Filtering**
+  - Three filter buttons above results: "All", "Presentations", "Books"
+  - Works without searching - click to see all documents of that type
+  - Instantly filter search results by document type
+  - Filters combine with directory and search query filters
+  - Active filter button highlighted in blue/green
+
+- **Context-Aware Terminology**
+  - Books show "Page 1, Page 2..." in preview modal
+  - Presentations show "Slide 1, Slide 2..." in preview modal
+  - Search results show "5 pages" for books, "12 slides" for presentations
+  - UI automatically adapts terminology based on document type
+
+### 🔧 Technical Implementation
+- Added `documentType` field to `SlideIndexItem` model
+- PDF MediaBox dimensions extracted from PDF structure
+- Orientation detection: `width > height = landscape = presentation`
+- TypeScript type: `'presentation' | 'book'`
+- Rust enum: `DocumentType::Presentation | DocumentType::Book`
+- Dynamic UI labels: "page" vs "slide" based on `documentType`
+
+---
+
 ## [0.4.2] - 2025-10-26
 
 ### 🎨 Native Desktop UI Transformation
@@ -364,11 +401,11 @@ brew install poppler tesseract  # For OCR support
 
 # Debug build (recommended for development)
 npm run tauri build -- --debug
-# Output: src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
+# Output: src-tauri/target/debug/bundle/dmg/Slides Indexer_0.4.3_aarch64.dmg
 
 # Release build (optimized)
 npm run tauri build
-# Output: src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.2_aarch64.dmg
+# Output: src-tauri/target/release/bundle/dmg/Slides Indexer_0.4.3_aarch64.dmg
 ```
 
 ### Testing & Debugging
@@ -399,7 +436,7 @@ npm run tauri:dev
 
 ---
 
-**Current Stable Version**: 0.4.2  
+**Current Stable Version**: 0.4.3  
 **Platform**: macOS (Apple Silicon & Intel)  
 **Build Date**: October 26, 2025
 

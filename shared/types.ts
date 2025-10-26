@@ -1,4 +1,5 @@
 export type SlideKind = 'pptx' | 'pdf' | 'ppt';
+export type DocumentType = 'presentation' | 'book';
 
 export interface SlidePreview {
   index: number;
@@ -17,6 +18,7 @@ export interface SlideIndexItem {
   updatedAt: number;
   slides: SlidePreview[];
   checksum?: string;
+  documentType?: DocumentType;
 }
 
 export interface AppState {

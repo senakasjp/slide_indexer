@@ -1,13 +1,13 @@
 # Slides Indexer - Quick Reference Guide
 
-**Version 0.4.2** | **Tauri Desktop Application** | **macOS Only**
+**Version 0.4.3** | **Tauri Desktop Application** | **macOS Only**
 
 ## 🚀 Getting Started
 
 ### Installation
 ```bash
 # Install from DMG
-Slides Indexer_0.4.2_aarch64.dmg
+Slides Indexer_0.4.3_aarch64.dmg
 
 # Run with console logs
 /Applications/Slides\ Indexer.app/Contents/MacOS/Slides\ Indexer
@@ -21,11 +21,12 @@ Slides Indexer_0.4.2_aarch64.dmg
 
 ## 🔍 Common Tasks
 
-### Search Presentations
+### Search and Filter
 - Type in search box (real-time results)
 - Use quotes for exact phrases: `"machine learning"`
 - Use wildcards: `data*` or `comput?r`
 - Click checkboxes to filter by directory
+- **Filter by type**: Click "Presentations" or "Books" button without searching to see all of that type
 
 ### Rescan Files
 ```
@@ -45,11 +46,34 @@ Click "Clear Cache" button → Confirmation modal appears → Confirm to clear c
 
 ## 📊 Understanding Scan Status
 
-### Version Badge (v0.4.2)
+### Version Badge (v0.4.2+)
 - Displayed in header next to app title
-- Current version: `0.4.2`
+- Current version: `0.4.3`
 - Small badge with wrench/tool icon
 - Helpful for verifying installed version
+
+### Document Type Badges (v0.4.3)
+Each document in search results shows its type:
+- **📊 Blue "Presentation" badge** - Slides and decks (Beamer, PowerPoint)
+- **📚 Green "Book" badge** - Books and documents (Calibre Library, portrait PDFs)
+- Badge displayed next to file type (PPTX, PDF, PPT)
+- Automatic detection based on PDF page orientation
+
+### Smart Terminology (v0.4.3)
+UI automatically adapts based on document type:
+- **Books**: Show "5 pages", preview displays "Page 1", "Page 2", etc.
+- **Presentations**: Show "12 slides", preview displays "Slide 1", "Slide 2", etc.
+- Count labels update automatically in search results
+- Preview modal headers change based on content type
+
+### Document Type Filter (v0.4.3)
+Three filter buttons above search results:
+- **"All"** - Show all documents (default)
+- **"Presentations"** - Show only landscape PDFs and PowerPoint files
+- **"Books"** - Show only portrait PDFs
+- **No search required** - Click any button to instantly see all documents of that type
+- Active filter button highlighted in blue/green
+- Works with directory filters and search queries
 
 ### Cache Statistics (v0.4.1+)
 Each directory in the list shows:
@@ -277,15 +301,42 @@ npm run tauri build
 - Long OCR scan needs to be interrupted
 
 ### Verifying Installation
-1. Check version badge in header → Should show `0.4.2`
+1. Check version badge in header → Should show `0.4.3`
 2. Click "Clear Cache" → Modal should appear (not immediate action)
 3. Start a rescan → "Stop scan" button should appear (red)
 4. Look for orange buttons (Link folder, Rescan, Search)
 5. Check UI has solid backgrounds (not translucent)
+6. Look for document type filter buttons above results
+7. Check for "Presentation" or "Book" badges in search results
+
+### How Document Type Detection Works
+**For PDFs:**
+- App extracts MediaBox dimensions from PDF structure
+- Compares width vs height of first page
+- **Landscape (width > height)** = Presentation (Beamer slides)
+- **Portrait (height > width)** = Book (Calibre Library, documents)
+
+**For PowerPoint (PPTX/PPT):**
+- Always classified as "Presentation"
+- No page orientation detection needed
+
+**Use Cases:**
+- Separate Beamer lecture slides from textbook PDFs
+- Browse all presentations without searching
+- Browse all books from Calibre Library
+- Find only presentations in mixed document library
+- Filter out books when searching for slides
+- Quickly identify document type at a glance
+
+**Benefits:**
+- Clear distinction between reference books and presentation materials
+- No search needed to browse by document type
+- Appropriate terminology (pages vs slides) for each document type
+- Easier navigation with context-aware labels
 
 ---
 
-**Version**: 0.4.2  
+**Version**: 0.4.3  
 **Platform**: macOS (Apple Silicon & Intel)  
 **App Type**: Tauri Desktop Application  
 **Console Logs**: Required for debugging (run from Terminal)
