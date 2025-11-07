@@ -1,3 +1,26 @@
+<style>
+  /* Remove shadows from all buttons */
+  :global(button) {
+    box-shadow: none !important;
+  }
+
+  /* Normal loader animation */
+  .loader {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #f97316;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { Alert, Badge, Button, Card, Input, Label, Modal, Spinner } from 'flowbite-svelte';
@@ -1070,6 +1093,31 @@ $: {
     selectedSlides = [];
   };
 
+  const handleShowInFolder = async (item: SlideIndexItem) => {
+    if (isOfflineMode) {
+      return;
+    }
+    try {
+      const { Command } = await import('@tauri-apps/api/shell');
+      const filePath = item.path;
+
+      // Use platform-specific command to reveal file in folder
+      if (navigator.platform.indexOf('Mac') !== -1) {
+        // macOS: Use 'open -R' to reveal in Finder
+        await Command.create('open', ['-R', filePath]).execute();
+      } else if (navigator.platform.indexOf('Win') !== -1) {
+        // Windows: Use 'explorer /select,'
+        await Command.create('explorer', ['/select,', filePath]).execute();
+      } else {
+        // Linux: Use xdg-open with the directory
+        const directory = filePath.substring(0, filePath.lastIndexOf('/'));
+        await Command.create('xdg-open', [directory]).execute();
+      }
+    } catch (error) {
+      console.error('Failed to show file in folder:', error);
+    }
+  };
+
   const highlightSearchTerms = (text: string, searchQuery: string): string => {
     if (!searchQuery.trim()) {
       return escapeHtml(text);
@@ -1386,7 +1434,7 @@ $: {
   <title>Slides Indexer</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-50 text-gray-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 text-gray-900 transition-all duration-300 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-100">
   <input
     class="hidden"
     type="file"
@@ -1395,37 +1443,33 @@ $: {
     on:change={handleFolderSelect}
   />
 
-  <header class="sticky top-0 z-20 border-b border-slate-200 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-    <div class="flex flex-wrap items-center gap-3 px-4 py-2 text-slate-600 transition-colors dark:text-slate-200">
-      <div class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
-        <span class="fa-solid fa-layer-group text-slate-400 dark:text-slate-500"></span>
-        Slides Indexer
-        <Badge size="xs" color="light" class="uppercase tracking-widest text-[10px] dark:bg-slate-800 dark:text-slate-200">
-          v{APP_VERSION}
-        </Badge>
-        {#if isOfflineMode}
-          <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700 dark:bg-amber-400/20 dark:text-amber-200">
-            <span class="fa-solid fa-wifi-slash"></span>
-            Offline
-          </span>
-        {/if}
+  <header class="sticky top-0 z-20 border-b border-slate-200/60 bg-white/80 backdrop-blur-lg transition-all duration-300 dark:border-slate-700/50 dark:bg-slate-900/80">
+    <div class="flex flex-wrap items-center gap-4 px-6 py-4 text-slate-700 transition-colors dark:text-slate-200">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-rose-500 shadow-lg shadow-orange-500/30">
+          <span class="fa-solid fa-presentation-screen text-white text-lg"></span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-lg font-bold tracking-tight">Slides Indexer</span>
+          <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <Badge size="xs" color="light" class="uppercase tracking-wider text-[9px] !px-2 !py-0.5 dark:bg-slate-800 dark:text-slate-300">
+              v{APP_VERSION}
+            </Badge>
+            {#if isOfflineMode}
+              <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:bg-amber-400/20 dark:text-amber-200">
+                <span class="fa-solid fa-wifi-slash"></span>
+                Offline
+              </span>
+            {/if}
+          </div>
+        </div>
       </div>
-      <div class="flex-1">
-        <SearchInput
-          id={HEADER_SEARCH_ID}
-          placeholder="Search slides by keyword, phrase, or wildcard…"
-          value={query}
-          on:change={(event) => handleSearchChange(event.detail)}
-          on:clear={handleClearSearch}
-          on:submit={handleSearchSubmit}
-          isSearching={isSearching}
-        />
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-2">
         <Button
           size="sm"
           color="light"
-          class="!px-3 !py-2"
+          class="!rounded-full !px-3 !py-2 shadow-sm hover:shadow transition-all"
           ariaLabel={themeToggleLabel}
           title={themeToggleLabel}
           on:click={() => {
@@ -1437,11 +1481,12 @@ $: {
             restoreSystemTheme();
           }}
         >
-          <span class={`fa-solid ${themeToggleIcon}`}></span>
+          <span class={`fa-solid ${themeToggleIcon} text-slate-600 dark:text-slate-300`}></span>
         </Button>
         <Button
           size="sm"
           color="light"
+          class="!rounded-lg shadow-sm hover:shadow transition-all"
           on:click={() => setView(view === 'help' ? 'index' : 'help')}
         >
           <span class="fa-solid {view === 'help' ? 'fa-grid-horizontal' : 'fa-circle-question'} me-2"></span>
@@ -1451,23 +1496,47 @@ $: {
     </div>
   </header>
 
-  <main class="space-y-4 px-4 py-6">
-    <section class="rounded-lg border border-slate-200 bg-white px-6 py-4 transition-colors dark:border-slate-700 dark:bg-slate-800">
-      <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">
-        Find any slide in seconds
-        <span class="ml-3 inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-xs font-normal text-slate-600 dark:bg-slate-700 dark:text-slate-400">
-          <span class="fa-solid fa-code-branch"></span>
-          {APP_VERSION}
-        </span>
-      </h1>
-      <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        {formatCountLabel(directories.length, 'linked folder', 'linked folders')} · {formatCountLabel(items.length, 'indexed document', 'indexed documents')} · Last update {formatTimestamp(lastIndexedAt)}
-      </p>
-      <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
-        Index PowerPoint and PDF decks, preview slides instantly, and launch files in their native apps without digging through folders.
-      </p>
-      <div class="mt-6 flex flex-wrap items-center gap-2">
-        <Button size="sm" class="bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600" on:click={handleLinkClick}>
+  <main class="space-y-6 px-6 py-8 max-w-7xl mx-auto">
+    {#if view === 'help'}
+      <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 transition-colors dark:border-slate-700 dark:bg-slate-800">
+        <HelpContent />
+      </div>
+    {:else}
+      {#if isLoading}
+        <div class="flex flex-col items-center justify-center py-32">
+          <div class="loader"></div>
+          <p class="mt-6 text-sm font-medium text-slate-600 dark:text-slate-400">Loading your presentations...</p>
+        </div>
+      {:else}
+
+        {#if !hasActiveQuery}
+          <section class="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-sm px-8 py-6 shadow-lg shadow-slate-200/50 transition-all duration-300 dark:border-slate-700/50 dark:bg-slate-800/60 dark:shadow-slate-900/30">
+            <div class="flex items-start justify-between gap-6">
+              <div class="flex-1">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">
+                  Find any slide in seconds
+                </h1>
+              <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+            <div class="inline-flex items-center gap-2 rounded-lg bg-slate-100/80 px-3 py-1.5 dark:bg-slate-700/50">
+              <span class="fa-solid fa-folder text-blue-500"></span>
+              <span class="font-medium">{directories.length} {directories.length === 1 ? 'Folder' : 'Folders'}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-lg bg-slate-100/80 px-3 py-1.5 dark:bg-slate-700/50">
+              <span class="fa-solid fa-file-lines text-green-500"></span>
+              <span class="font-medium">{items.length} {items.length === 1 ? 'Document' : 'Documents'}</span>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-lg bg-slate-100/80 px-3 py-1.5 dark:bg-slate-700/50">
+              <span class="fa-solid fa-clock text-orange-500"></span>
+              <span class="font-medium">{formatTimestamp(lastIndexedAt)}</span>
+            </div>
+          </div>
+          <p class="mt-4 text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+            Index PowerPoint and PDF decks, preview slides instantly, and launch files in their native apps — all without digging through folders.
+          </p>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <Button size="sm" class="!rounded-lg bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/40 dark:from-orange-500 dark:to-rose-500 dark:hover:from-orange-600 dark:hover:to-rose-600" on:click={handleLinkClick}>
           <span class="fa-solid fa-folder-plus me-2"></span>
           {isOfflineMode ? 'Pick folder' : 'Link folder'}
         </Button>
@@ -1475,6 +1544,7 @@ $: {
           <Button
             size="sm"
             color="red"
+            class="!rounded-lg shadow-lg shadow-red-500/30"
             on:click={() => {
               scanStopped = true;
               currentScanPath = null;
@@ -1502,6 +1572,7 @@ $: {
           <Button
             size="sm"
             color="light"
+            class="!rounded-lg shadow-sm hover:shadow transition-all"
             on:click={rescanAll}
           >
             <span class="fa-solid fa-rotate me-2"></span>
@@ -1511,6 +1582,7 @@ $: {
         <Button
           size="sm"
           color="red"
+          class="!rounded-lg shadow-sm hover:shadow-lg hover:shadow-red-500/30 transition-all"
           on:click={() => { showClearCacheModal = true; }}
           disabled={isRescanning}
         >
@@ -1520,20 +1592,22 @@ $: {
       </div>
       
       {#if isRescanning}
-        <div class="mt-3 space-y-3">
+        <div class="mt-6 space-y-3">
           {#if currentScanPath}
-            <div class="space-y-2">
-              <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                {#if currentScanStatus === 'cached'}
-                  <span class="fa-solid fa-check text-green-500"></span>
-                {:else if currentScanStatus === 'ocr'}
-                  <span class="fa-solid fa-magnifying-glass text-purple-500" title="Running OCR"></span>
-                {:else if currentScanStatus === 'scanning'}
-                  <span class="fa-solid fa-xmark text-orange-500"></span>
-                {:else}
-                  <span class="fa-solid fa-circle-notch fa-spin text-orange-500"></span>
-                {/if}
-                <span class="break-all font-medium">{currentScanPath}</span>
+            <div class="rounded-xl border border-blue-200 bg-blue-50/50 p-4 shadow-sm dark:border-blue-800/50 dark:bg-blue-900/20">
+              <div class="flex items-center gap-3 text-sm">
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg {currentScanStatus === 'cached' ? 'bg-green-100 dark:bg-green-900/30' : currentScanStatus === 'ocr' ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}">
+                  {#if currentScanStatus === 'cached'}
+                    <span class="fa-solid fa-check text-green-600 dark:text-green-400"></span>
+                  {:else if currentScanStatus === 'ocr'}
+                    <span class="fa-solid fa-magnifying-glass text-purple-600 dark:text-purple-400" title="Running OCR"></span>
+                  {:else if currentScanStatus === 'scanning'}
+                    <span class="fa-solid fa-xmark text-orange-600 dark:text-orange-400"></span>
+                  {:else}
+                    <span class="fa-solid fa-circle-notch fa-spin text-orange-600 dark:text-orange-400"></span>
+                  {/if}
+                </div>
+                <span class="break-all font-medium text-slate-700 dark:text-slate-300">{currentScanPath}</span>
               </div>
               {#if processingTime > 0}
                 <div class="ml-6 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
@@ -1667,171 +1741,179 @@ $: {
           </div>
         </div>
       {/if}
-    </section>
+          </section>
+        {/if}
 
-    <section class="grid grid-cols-3 gap-3">
-      <article class="rounded border border-slate-200 bg-white px-4 py-3 transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Directories</span>
-        <p class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{directories.length.toLocaleString()}</p>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Organise your decks by linking one or many root folders.</p>
-      </article>
-      <article class="rounded border border-slate-200 bg-white px-4 py-3 transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Indexed decks</span>
-        <p class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{items.length.toLocaleString()}</p>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Each deck is parsed for fast keyword and slide-level search.</p>
-      </article>
-      <article class="rounded border border-slate-200 bg-white px-4 py-3 transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Last indexed</span>
-        <p class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatTimestamp(lastIndexedAt)}</p>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Kick off a rescan any time decks are updated.</p>
-      </article>
-    </section>
-
-    {#if offlineNotice}
-      <Alert color="yellow" class="border border-amber-200 bg-amber-50/80 shadow-sm">
-        <span class="font-semibold text-amber-900">Offline mode:</span> {offlineNotice}
-      </Alert>
-    {/if}
-
-    {#if loadError}
-      <Alert color="failure" class="shadow-sm">
-        Failed to load index: {loadError}
-      </Alert>
-    {/if}
-
-    {#if openDeckError}
-      <Alert color="failure" class="shadow-sm">
-        {openDeckError}
-      </Alert>
-    {/if}
-
-    {#if scanErrors.length}
-      <Alert color="warning" class="shadow-sm">
-        <div class="flex flex-col gap-2">
-          <span class="font-semibold text-slate-900">Indexer warnings</span>
-          <ul class="list-disc ps-5 text-sm text-slate-700">
-            {#each scanErrors as message}
-              <li>{message}</li>
-            {/each}
-          </ul>
-        </div>
-      </Alert>
-    {/if}
-
-    {#if pdfExtractionWarning}
-      <Alert color="warning" class="shadow-sm">
-        Some PDFs do not expose extractable text. For full PDF scanning with OCR support, install poppler and tesseract (e.g., <code class="font-mono">brew install poppler tesseract</code> on macOS) and run the Node indexer server.
-      </Alert>
-    {/if}
-
-    {#if view === 'help'}
-      <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <HelpContent />
-      </div>
-    {:else}
-      {#if isLoading}
-        <div class="flex justify-center py-20">
-          <Spinner size="12" />
-        </div>
-      {:else}
-        <p class="text-sm text-slate-500 dark:text-slate-300">
-          Tips: wrap exact phrases in quotes, use `*` or `?` for wildcards, and results update instantly as you type.
-        </p>
-        <section class="space-y-5">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Directories</h2>
-            {#if directories.length}
-              <div class="flex flex-wrap items-center gap-3">
-                <Button size="xs" color="light" on:click={toggleAllDirectories}>
-                  <span class="fa-solid {selectedDirectories.size === directories.length ? 'fa-square-check' : 'fa-square'} me-2"></span>
+        {#if directories.length > 0}
+          <section class="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-sm px-6 py-5 shadow-lg shadow-slate-200/50 transition-all duration-300 dark:border-slate-700/50 dark:bg-slate-800/60 dark:shadow-slate-900/30">
+            <div class="flex items-center justify-between mb-5">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/30">
+                  <span class="fa-solid fa-folder-tree text-white text-lg"></span>
+                </div>
+                <div>
+                  <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">Select Folders to Search</h2>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Choose which directories to include in your search</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <Button size="xs" color="light" class="!rounded-lg shadow-sm hover:shadow transition-all" on:click={toggleAllDirectories}>
+                  <span class="fa-solid {selectedDirectories.size === directories.length ? 'fa-square-minus' : 'fa-square-check'} me-2"></span>
                   {selectedDirectories.size === directories.length ? 'Deselect All' : 'Select All'}
                 </Button>
-                <span class="text-xs text-slate-500 dark:text-slate-300">
-                  {selectedDirectories.size} of {directories.length} selected for search
-                </span>
+                {#if selectedDirectories.size > 0}
+                  <Badge color="blue" class="!rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm">
+                    <span class="fa-solid fa-check-circle me-1.5"></span>
+                    {selectedDirectories.size} of {directories.length} selected
+                  </Badge>
+                {/if}
+              </div>
+            </div>
+
+            <!-- Search Box -->
+            <div class="mb-5">
+              <SearchInput
+                id={HEADER_SEARCH_ID}
+                placeholder="Search presentations, PDFs, and slides..."
+                value={query}
+                on:change={(event) => handleSearchChange(event.detail)}
+                on:clear={handleClearSearch}
+                on:submit={handleSearchSubmit}
+                isSearching={isSearching}
+              />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {#each directories as directory}
+                {@const stats = getDirectoryStats(directory)}
+                {@const isSelected = selectedDirectories.has(directory)}
+                <button
+                  type="button"
+                  class="group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200 {isSelected ? 'border-orange-400 bg-orange-50/50 shadow-md dark:border-orange-500 dark:bg-orange-900/20' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-600'}"
+                  on:click={() => toggleDirectory(directory)}
+                >
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg transition-all {isSelected ? 'bg-gradient-to-br from-orange-500 to-rose-500 shadow-lg shadow-orange-500/30' : 'bg-slate-100 dark:bg-slate-700'}">
+                    <span class="fa-solid {isSelected ? 'fa-check text-white' : 'fa-folder text-slate-400 dark:text-slate-500'} text-lg transition-all"></span>
+                  </div>
+                  <div class="min-w-0 flex-1 space-y-2">
+                    <p class="truncate text-sm font-semibold {isSelected ? 'text-orange-900 dark:text-orange-100' : 'text-slate-800 dark:text-slate-100'}">{directory.split('/').pop() || directory}</p>
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                      <span class="inline-flex items-center gap-1.5 rounded-md bg-slate-100/80 px-2 py-0.5 dark:bg-slate-700/50">
+                        <span class="fa-solid fa-font text-slate-500 dark:text-slate-400"></span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300">{stats.wordCount.toLocaleString()}</span>
+                      </span>
+                      <span class="inline-flex items-center gap-1.5 rounded-md bg-slate-100/80 px-2 py-0.5 dark:bg-slate-700/50">
+                        <span class="fa-solid fa-database text-slate-500 dark:text-slate-400"></span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300">{stats.cacheSize}</span>
+                      </span>
+                    </div>
+                    <p class="truncate text-[10px] text-slate-500 dark:text-slate-400" title={directory}>{directory}</p>
+                  </div>
+                </button>
+              {/each}
+            </div>
+            {#if selectedDirectories.size === 0}
+              <div class="mt-4 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/50 px-4 py-3 dark:border-amber-700 dark:bg-amber-900/20">
+                <div class="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200">
+                  <span class="fa-solid fa-exclamation-triangle"></span>
+                  <span class="font-semibold">No folders selected</span>
+                  <span class="text-amber-700 dark:text-amber-300">— Search will return no results. Please select at least one folder.</span>
+                </div>
               </div>
             {/if}
-          </div>
-          <div class="rounded-lg border border-slate-200 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-            {#if directories.length}
-              <ul class="divide-y divide-slate-200 dark:divide-slate-700">
-                {#each directories as directory}
-                  {@const stats = getDirectoryStats(directory)}
-                  <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition hover:bg-slate-50 dark:hover:bg-slate-800/80">
-                    <div class="flex min-w-0 flex-1 items-center gap-3">
-                      <button
-                        type="button"
-                        class="flex-shrink-0 cursor-pointer text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                        on:click={() => toggleDirectory(directory)}
-                        aria-label="Toggle directory selection"
-                      >
-                        <span class="fa-solid {selectedDirectories.has(directory) ? 'fa-square-check' : 'fa-square'} text-xl"></span>
-                      </button>
-                      <div class="min-w-0 flex-1 space-y-1">
-                        <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{directory}</p>
-                        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                          <span class="inline-flex items-center gap-1.5" title="Total words in cache">
-                            <span class="fa-solid fa-font text-slate-400 dark:text-slate-500"></span>
-                            {stats.wordCount.toLocaleString()} words
-                          </span>
-                          <span class="inline-flex items-center gap-1.5" title="Cache size">
-                            <span class="fa-solid fa-database text-slate-400 dark:text-slate-500"></span>
-                            {stats.cacheSize}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                      <Button
-                        size="xs"
-                        color="light"
-                        disabled={isRescanning && rescanningDirectory !== directory}
-                        on:click={() => rescanDirectory(directory)}
-                      >
-                        {#if isRescanning && rescanningDirectory === directory}
-                          <div class="flex min-w-36 max-w-80 flex-col items-start gap-1">
-                            <div class="h-1 w-full overflow-hidden rounded-full bg-primary-100 dark:bg-primary-900/40">
-                              <div class="h-full w-full animate-pulse rounded-full bg-primary-500"></div>
-                            </div>
-                            <span class="text-xs font-semibold text-primary-600 dark:text-primary-300">Rescanning…</span>
-                            {#if currentScanPath}
-                              <span class="w-full truncate text-[10px] text-slate-500 dark:text-slate-400">
-                                {currentScanPath}
-                              </span>
-                            {/if}
-                          </div>
-                        {:else}
-                          <span class="fa-solid fa-rotate me-2"></span>
-                          Rescan
-                        {/if}
-                      </Button>
-                      <Button size="xs" color="red" on:click={() => removeDirectory(directory)}>
-                        <span class="fa-solid fa-xmark me-2"></span>
-                        Unlink
-                      </Button>
-                    </div>
-                  </li>
+          </section>
+        {/if}
+
+        {#if !hasActiveQuery}
+          <section class="grid grid-cols-3 gap-4">
+          <article class="group rounded-2xl border border-blue-200/60 bg-gradient-to-br from-blue-50 to-white px-6 py-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-blue-200/50 dark:border-blue-800/30 dark:from-blue-900/20 dark:to-slate-800 dark:hover:shadow-blue-900/30">
+            <div class="flex items-center gap-3">
+              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 transition-all group-hover:bg-blue-500/20 dark:bg-blue-500/20">
+                <span class="fa-solid fa-folder-open text-2xl text-blue-600 dark:text-blue-400"></span>
+              </div>
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Directories</span>
+                <p class="text-3xl font-bold text-slate-900 dark:text-slate-100">{directories.length.toLocaleString()}</p>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Organize your decks by linking one or many root folders.</p>
+          </article>
+          <article class="group rounded-2xl border border-green-200/60 bg-gradient-to-br from-green-50 to-white px-6 py-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-green-200/50 dark:border-green-800/30 dark:from-green-900/20 dark:to-slate-800 dark:hover:shadow-green-900/30">
+            <div class="flex items-center gap-3">
+              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 transition-all group-hover:bg-green-500/20 dark:bg-green-500/20">
+                <span class="fa-solid fa-file-lines text-2xl text-green-600 dark:text-green-400"></span>
+              </div>
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400">Indexed Decks</span>
+                <p class="text-3xl font-bold text-slate-900 dark:text-slate-100">{items.length.toLocaleString()}</p>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Each deck is parsed for fast keyword and slide-level search.</p>
+          </article>
+          <article class="group rounded-2xl border border-orange-200/60 bg-gradient-to-br from-orange-50 to-white px-6 py-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-orange-200/50 dark:border-orange-800/30 dark:from-orange-900/20 dark:to-slate-800 dark:hover:shadow-orange-900/30">
+            <div class="flex items-center gap-3">
+              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 transition-all group-hover:bg-orange-500/20 dark:bg-orange-500/20">
+                <span class="fa-solid fa-clock-rotate-left text-2xl text-orange-600 dark:text-orange-400"></span>
+              </div>
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">Last Indexed</span>
+                <p class="text-lg font-bold text-slate-900 dark:text-slate-100">{lastIndexedAt ? new Date(lastIndexedAt).toLocaleDateString() : 'Never'}</p>
+              </div>
+            </div>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Kick off a rescan any time decks are updated.</p>
+          </article>
+        </section>
+        {/if}
+
+        {#if offlineNotice}
+          <Alert color="yellow" class="border border-amber-200 bg-amber-50/80 shadow-sm">
+            <span class="font-semibold text-amber-900">Offline mode:</span> {offlineNotice}
+          </Alert>
+        {/if}
+
+        {#if loadError}
+          <Alert color="failure" class="shadow-sm">
+            Failed to load index: {loadError}
+          </Alert>
+        {/if}
+
+        {#if openDeckError}
+          <Alert color="failure" class="shadow-sm">
+            {openDeckError}
+          </Alert>
+        {/if}
+
+        {#if scanErrors.length}
+          <Alert color="warning" class="shadow-sm">
+            <div class="flex flex-col gap-2">
+              <span class="font-semibold text-slate-900">Indexer warnings</span>
+              <ul class="list-disc ps-5 text-sm text-slate-700">
+                {#each scanErrors as message}
+                  <li>{message}</li>
                 {/each}
               </ul>
-            {:else}
-              <div class="px-5 py-6 text-sm text-slate-600 dark:text-slate-300">
-                No directories linked yet. Use <strong>Link a folder</strong> to add your slide decks.
-              </div>
-            {/if}
-          </div>
-        </section>
+            </div>
+          </Alert>
+        {/if}
 
-        <section class="space-y-4">
-          <div class="flex items-center justify-between gap-3">
-            <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Results</h2>
+        {#if pdfExtractionWarning}
+          <Alert color="warning" class="shadow-sm">
+            Some PDFs do not expose extractable text. For full PDF scanning with OCR support, install poppler and tesseract (e.g., <code class="font-mono">brew install poppler tesseract</code> on macOS) and run the Node indexer server.
+          </Alert>
+        {/if}
+
+        {#if hasActiveQuery}
+          <section class="space-y-5">
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Search Results</h2>
             <div class="flex flex-wrap items-center gap-2">
               {#if selectedDirectories.size > 0 && selectedDirectories.size < directories.length}
-                <Badge color="blue" class="rounded-full px-3 text-xs uppercase tracking-wide dark:bg-blue-500/20 dark:text-blue-200">
-                  <span class="fa-solid fa-filter me-1"></span>
+                <Badge color="blue" class="!rounded-lg px-3 py-1.5 text-xs font-medium uppercase tracking-wide shadow-sm dark:bg-blue-500/20 dark:text-blue-200">
+                  <span class="fa-solid fa-filter me-1.5"></span>
                   {selectedDirectories.size} folder{selectedDirectories.size === 1 ? '' : 's'}
                 </Badge>
               {/if}
-              <Badge color="blue" class="rounded-full px-3 text-xs uppercase tracking-wide dark:bg-primary-500/20 dark:text-primary-200">
+              <Badge color="blue" class="!rounded-lg px-3 py-1.5 text-xs font-medium uppercase tracking-wide shadow-sm dark:bg-primary-500/20 dark:text-primary-200">
+                <span class="fa-solid fa-list-check me-1.5"></span>
                 {hasActiveQuery
                   ? formatCountLabel(filteredItems.length, 'match', 'matches')
                   : 'Ready'}
@@ -1840,123 +1922,156 @@ $: {
           </div>
 
           <!-- Document Type Filter Buttons -->
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-sm text-slate-600 dark:text-slate-400">Document type:</span>
-            <Button
-              size="xs"
-              color={documentTypeFilter === 'all' ? 'blue' : 'light'}
-              on:click={() => handleDocumentTypeFilterChange('all')}
-              class="!px-3 !py-1.5"
-            >
-              <span class="fa-solid fa-list me-1"></span>
-              All
-            </Button>
-            <Button
-              size="xs"
-              color={documentTypeFilter === 'presentation' ? 'blue' : 'light'}
-              on:click={() => handleDocumentTypeFilterChange('presentation')}
-              class="!px-3 !py-1.5"
-            >
-              <span class="fa-solid fa-presentation-screen me-1"></span>
-              Presentations
-            </Button>
-            <Button
-              size="xs"
-              color={documentTypeFilter === 'book' ? 'green' : 'light'}
-              on:click={() => handleDocumentTypeFilterChange('book')}
-              class="!px-3 !py-1.5"
-            >
-              <span class="fa-solid fa-book me-1"></span>
-              Books
-            </Button>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">Filter by type:</span>
+            <div class="flex gap-2">
+              <Button
+                size="xs"
+                color={documentTypeFilter === 'all' ? 'blue' : 'light'}
+                on:click={() => handleDocumentTypeFilterChange('all')}
+                class="!rounded-lg !px-4 !py-2 shadow-sm transition-all {documentTypeFilter === 'all' ? 'shadow-blue-500/30' : 'hover:shadow'}"
+              >
+                <span class="fa-solid fa-list me-2"></span>
+                All Documents
+              </Button>
+              <Button
+                size="xs"
+                color={documentTypeFilter === 'presentation' ? 'blue' : 'light'}
+                on:click={() => handleDocumentTypeFilterChange('presentation')}
+                class="!rounded-lg !px-4 !py-2 shadow-sm transition-all {documentTypeFilter === 'presentation' ? 'shadow-blue-500/30' : 'hover:shadow'}"
+              >
+                <span class="fa-solid fa-presentation-screen me-2"></span>
+                Presentations
+              </Button>
+              <Button
+                size="xs"
+                color={documentTypeFilter === 'book' ? 'green' : 'light'}
+                on:click={() => handleDocumentTypeFilterChange('book')}
+                class="!rounded-lg !px-4 !py-2 shadow-sm transition-all {documentTypeFilter === 'book' ? 'shadow-green-500/30' : 'hover:shadow'}"
+              >
+                <span class="fa-solid fa-book me-2"></span>
+                Books
+              </Button>
+            </div>
           </div>
 
           {#if !hasActiveQuery}
-            <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              Start typing in the search bar above to find matching documents.
+            <div class="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-sm px-8 py-12 text-center shadow-lg transition-all dark:border-slate-700/50 dark:bg-slate-800/60">
+              <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-slate-100 dark:from-blue-900/30 dark:to-slate-700/30">
+                <span class="fa-solid fa-magnifying-glass text-4xl text-blue-500 dark:text-blue-400"></span>
+              </div>
+              <p class="mt-4 text-base font-medium text-slate-700 dark:text-slate-300">
+                Start typing in the search bar above to find matching documents
+              </p>
+              <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Use quotes for exact phrases, * for wildcards, or just type keywords
+              </p>
             </div>
           {:else if !filteredItems.length}
-            <div class="rounded-lg border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              {query.trim()
-                ? 'No results matched your search. Try removing filters or checking spelling.'
-                : 'No documents indexed yet. Link a directory or rescan to populate results.'}
+            <div class="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-sm px-8 py-12 text-center shadow-lg transition-all dark:border-slate-700/50 dark:bg-slate-800/60">
+              <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-slate-100 dark:from-amber-900/30 dark:to-slate-700/30">
+                <span class="fa-solid fa-circle-exclamation text-4xl text-amber-500 dark:text-amber-400"></span>
+              </div>
+              <p class="mt-4 text-base font-medium text-slate-700 dark:text-slate-300">
+                {query.trim()
+                  ? 'No results matched your search'
+                  : 'No documents indexed yet'}
+              </p>
+              <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                {query.trim()
+                  ? 'Try removing filters or checking spelling'
+                  : 'Link a directory or rescan to populate results'}
+              </p>
             </div>
           {:else}
-            <div class={`auto-rows-fr ${gridClass} grid-cols-3`}>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {#each filteredItems as item (item.id)}
-                <article class="flex h-full flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/50">
+                <article class="group flex h-full flex-col gap-4 rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 shadow-lg transition-all duration-300 hover:shadow-xl hover:shadow-slate-300/50 hover:-translate-y-1 dark:border-slate-700/50 dark:bg-slate-800/80 dark:hover:shadow-slate-900/50">
                   <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0 space-y-1">
-                      <h3 class="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">{item.name}</h3>
-                      <p class="truncate text-xs text-slate-500 dark:text-slate-300">{item.path}</p>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                      <Badge color="light" class="whitespace-nowrap dark:bg-slate-800 dark:text-slate-200">
-                        <span class={`fa-solid ${getKindMeta(item.kind).icon} me-1`}></span>
-                        {getKindMeta(item.kind).label}
-                      </Badge>
-                      {#if item.documentType}
-                        {@const docMeta = getDocumentTypeMeta(item.documentType)}
-                        {#if docMeta}
-                          <Badge color={docMeta.color} class="whitespace-nowrap">
-                            <span class={`fa-solid ${docMeta.icon} me-1`}></span>
-                            {docMeta.label}
-                          </Badge>
-                        {/if}
-                      {/if}
+                    <div class="min-w-0 flex-1 space-y-2">
+                      <h3 class="truncate text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{item.name}</h3>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5" title={item.path}>
+                        <span class="fa-solid fa-folder text-slate-400"></span>
+                        <span class="break-all line-clamp-2">{item.path}</span>
+                      </p>
                     </div>
                   </div>
 
-                  <div class="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-300">
-                    <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800/80">
-                      <span class="fa-solid fa-layer-group text-slate-400 dark:text-slate-500"></span>
+                  <div class="flex flex-wrap gap-2">
+                    <Badge color="light" class="!rounded-lg whitespace-nowrap shadow-sm dark:bg-slate-700/80 dark:text-slate-200">
+                      <span class={`fa-solid ${getKindMeta(item.kind).icon} me-1.5`}></span>
+                      {getKindMeta(item.kind).label}
+                    </Badge>
+                    {#if item.documentType}
+                      {@const docMeta = getDocumentTypeMeta(item.documentType)}
+                      {#if docMeta}
+                        <Badge color={docMeta.color} class="!rounded-lg whitespace-nowrap shadow-sm">
+                          <span class={`fa-solid ${docMeta.icon} me-1.5`}></span>
+                          {docMeta.label}
+                        </Badge>
+                      {/if}
+                    {/if}
+                  </div>
+
+                  <div class="flex flex-wrap gap-2 text-xs">
+                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 font-medium text-slate-700 dark:bg-slate-700/60 dark:text-slate-300">
+                      <span class="fa-solid fa-layer-group text-slate-500 dark:text-slate-400"></span>
                       {item.slideCount ?? '—'} {item.documentType === 'book' ? 'page' : 'slide'}{item.slideCount === 1 ? '' : 's'}
                     </span>
-                    <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800/80">
-                      <span class="fa-solid fa-calendar-plus text-slate-400 dark:text-slate-500"></span>
-                      Created {formatTimestamp(item.createdAt ?? null)}
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800/80">
-                      <span class="fa-solid fa-clock text-slate-400 dark:text-slate-500"></span>
-                      Updated {formatTimestamp(item.updatedAt ?? null)}
+                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 font-medium text-slate-700 dark:bg-slate-700/60 dark:text-slate-300">
+                      <span class="fa-solid fa-clock text-slate-500 dark:text-slate-400"></span>
+                      {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'Unknown'}
                     </span>
                   </div>
 
                   {#if item.snippet}
-                    <p class="text-sm leading-relaxed text-slate-600 max-h-28 overflow-hidden text-ellipsis dark:text-slate-300">
+                    <p class="text-sm leading-relaxed text-slate-600 max-h-20 overflow-hidden line-clamp-3 dark:text-slate-300">
                       {item.snippet}
                     </p>
                   {:else}
-                    <p class="text-sm text-slate-500 italic dark:text-slate-400">No text preview available.</p>
+                    <p class="text-sm text-slate-500 italic dark:text-slate-400">No text preview available</p>
                   {/if}
 
                   {#if item.keywords?.length}
-                    <div class="flex flex-wrap gap-1">
-                      {#each item.keywords.slice(0, 6) as keyword}
-                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-[11px] uppercase tracking-wide text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
+                    <div class="flex flex-wrap gap-1.5">
+                      {#each item.keywords.slice(0, 5) as keyword}
+                        <span class="inline-flex items-center rounded-lg bg-gradient-to-r from-blue-100 to-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-blue-700 dark:from-blue-900/40 dark:to-slate-700/40 dark:text-blue-300">
                           {keyword}
                         </span>
                       {/each}
                     </div>
                   {/if}
 
-                  <div class="mt-auto flex flex-wrap gap-2">
-                    <Button size="xs" color="light" on:click={() => handlePreview(item)}>
-                      <span class="fa-solid fa-eye me-2"></span>
-                      Preview
-                    </Button>
+                  <div class="mt-auto flex flex-col gap-2 pt-2">
+                    <div class="flex gap-2">
+                      <Button size="xs" color="light" class="!rounded-lg shadow-sm hover:shadow transition-all flex-1" on:click={() => handlePreview(item)}>
+                        <span class="fa-solid fa-eye me-2"></span>
+                        Preview
+                      </Button>
+                      <Button
+                        size="xs"
+                        class="!rounded-lg bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-sm hover:shadow-lg hover:shadow-orange-500/30 transition-all flex-1"
+                        on:click={() => handleOpenDeck(item)}
+                        disabled={isOpeningDeck || isOfflineMode}
+                      >
+                        {#if isOpeningDeck}
+                          <Spinner size="3" />
+                          <span class="ms-2">Opening…</span>
+                        {:else}
+                          <span class="fa-solid fa-up-right-from-square me-2"></span>
+                          Open
+                        {/if}
+                      </Button>
+                    </div>
                     <Button
                       size="xs"
-                      on:click={() => handleOpenDeck(item)}
-                      disabled={isOpeningDeck || isOfflineMode}
+                      color="light"
+                      class="!rounded-lg shadow-sm hover:shadow transition-all w-full"
+                      on:click={() => handleShowInFolder(item)}
+                      disabled={isOfflineMode}
                     >
-                      {#if isOpeningDeck}
-                        <Spinner size="3" />
-                        <span class="ms-2">Opening…</span>
-                      {:else}
-                        <span class="fa-solid fa-up-right-from-square me-2"></span>
-                        Open in app
-                      {/if}
+                      <span class="fa-solid fa-folder-open me-2"></span>
+                      Show in Folder
                     </Button>
                   </div>
                 </article>
@@ -1964,6 +2079,8 @@ $: {
             </div>
           {/if}
         </section>
+        {/if}
+
       {/if}
     {/if}
   </main>

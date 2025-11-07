@@ -5,6 +5,21 @@
     <link rel="icon" type="image/png" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Slides Indexer</title>
+    <!-- Preload Font Awesome fonts -->
+    <link rel="preload" href="/fonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Load Font Awesome CSS -->
+    <link rel="stylesheet" href="/fontawesome.css" />
+    <style>
+      /* Force font to load immediately by using it */
+      body::before {
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        content: "";
+        display: none;
+      }
+    </style>
   </head>
   <body class="bg-gray-50 text-gray-900">
     <div id="app"></div>

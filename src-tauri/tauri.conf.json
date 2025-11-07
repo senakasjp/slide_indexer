@@ -17,7 +17,26 @@
       },
       "shell": {
         "all": false,
-        "open": true
+        "open": true,
+        "execute": true,
+        "sidecar": false,
+        "scope": [
+          {
+            "name": "open",
+            "cmd": "open",
+            "args": ["-R", { "validator": "\\S+" }]
+          },
+          {
+            "name": "explorer",
+            "cmd": "explorer",
+            "args": ["/select,", { "validator": "\\S+" }]
+          },
+          {
+            "name": "xdg-open",
+            "cmd": "xdg-open",
+            "args": [{ "validator": "\\S+" }]
+          }
+        ]
       },
       "fs": {
         "all": true
